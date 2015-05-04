@@ -1,3 +1,6 @@
+import io
+import zipfile
+
 import jinja2
 
 import klein
@@ -23,6 +26,15 @@ class DownloadEFolder(object):
     @app.route("/")
     def index(self, request):
         return self.render_template("index.html")
+
+    @app.route("/download/", methods=["POST"])
+    def download(self, request):
+        data = io.BytesIO()
+        with zipfile.ZipFile(data, "w") as zip_file:
+            pass
+        request.setHeader("Content-Type", "application/zip")
+        return data.getvalue()
+
 
 
 if __name__ == "__main__":
