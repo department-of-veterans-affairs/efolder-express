@@ -1,7 +1,6 @@
 import io
 import os
 import stat
-import subprocess
 import sys
 import tempfile
 import zipfile
@@ -12,8 +11,9 @@ import klein
 
 from pathlib import Path
 
-from twisted.internet.defer import Deferred
+from twisted.internet.defer import Deferred, inlineCallbacks, returnValue
 from twisted.internet.task import react
+from twisted.internet.utils import getProcessOutput
 from twisted.web.server import Site
 
 
@@ -58,36 +58,39 @@ STDOUT.write({formatter})
         st = os.stat(f.name)
         os.chmod(f.name, st.st_mode | stat.S_IEXEC)
 
-        return subprocess.check_output([
+        return getProcessOutput(
             "/Users/alex_gaynor/.gem/ruby/2.0.0/bin/bundle",
-            "exec",
-            f.name
-        ], cwd="/Users/alex_gaynor/projects/va/connect_vbms/")
+            ["exec", f.name],
+            env=os.environ,
+            path="/Users/alex_gaynor/projects/va/connect_vbms/",
+            reactor=self.reactor
+        )
 
     @app.route("/")
     def index(self, request):
         return self.render_template("index.html")
 
     @app.route("/download/", methods=["POST"])
+    @inlineCallbacks
     def download(self, request):
         file_number = request.args["file_number"][0]
         data = io.BytesIO()
 
-        files = self._execute_connect_vbms(
+        files = (yield self._execute_connect_vbms(
             "VBMS::Requests::ListDocuments.new({!r})".format(file_number),
-            'result.join("\\n")'
-        ).splitlines()
+            'result.map(&:document_id).join("\\n")'
+        )).splitlines()
         with zipfile.ZipFile(data, "w") as zip_file:
             for i, f in enumerate(files):
-                contents = self._execute_connect_vbms(
+                contents = yield self._execute_connect_vbms(
                     "VBMS::Requests::FetchDocumentById.new({!r})".format(f),
-                    "result",
+                    "result.content",
                 )
                 zip_file.writestr(
                     "{}-eFolder/{}".format(file_number, i), contents
                 )
         request.setHeader("Content-Type", "application/zip")
-        return data.getvalue()
+        returnValue(data.getvalue())
 
 
 def main(reactor):
