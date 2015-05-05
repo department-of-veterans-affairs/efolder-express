@@ -2,6 +2,7 @@ import io
 import os
 import stat
 import subprocess
+import sys
 import tempfile
 import zipfile
 
@@ -11,11 +12,17 @@ import klein
 
 from pathlib import Path
 
+from twisted.internet.defer import Deferred
+from twisted.internet.task import react
+from twisted.web.server import Site
+
 
 class DownloadEFolder(object):
     app = klein.Klein()
 
-    def __init__(self):
+    def __init__(self, reactor):
+        self.reactor = reactor
+
         self.jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(
                 str(Path(__file__).parent.joinpath("templates")),
@@ -76,11 +83,18 @@ STDOUT.write({formatter})
                     "VBMS::Requests::FetchDocumentById.new({!r})".format(f),
                     "result",
                 )
-                zip_file.writestr("{}-eFolder/{}".format(file_number, i), contents)
+                zip_file.writestr(
+                    "{}-eFolder/{}".format(file_number, i), contents
+                )
         request.setHeader("Content-Type", "application/zip")
         return data.getvalue()
 
 
+def main(reactor):
+    app = DownloadEFolder(reactor)
+    reactor.listenTCP(8080, Site(app.app.resource()), interface="localhost")
+    return Deferred()
+
 
 if __name__ == "__main__":
-    DownloadEFolder().app.run("localhost", 8080)
+    react(main, sys.argv[1:])
