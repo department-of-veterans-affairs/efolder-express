@@ -1,0 +1,13 @@
+README
+======
+
+This is the contents of the eFolder for file number: {{ status.file_number }}.
+
+{% for doc in status.manifest %}
+{{ doc.filename }}
+{{ '-' * doc.filename|length() }}
+
+Document type: {{ doc.doc_type }}
+Received at: {{ doc.received_at }}
+Source: {{ doc.source }}
+{% endfor %}

@@ -43,7 +43,9 @@ class Document(object):
 
 
 class DownloadStatus(object):
-    def __init__(self, file_number, request_id):
+    def __init__(self, jinja_env, file_number, request_id):
+        self.jinja_env = jinja_env
+
         self.file_number = file_number
         self.request_id = request_id
 
@@ -77,6 +79,14 @@ class DownloadStatus(object):
             contents
         )
         document.completed = True
+
+    def finalize_zip_contents(self):
+        self.zipfile.writestr(
+            "{}-eFolder/README.txt".format(self.file_number),
+            self.jinja_env.get_template("readme.txt").render({"status": self}).encode(),
+        )
+        self.zipfile.close()
+        return self._io.getvalue()
 
 
 class DownloadEFolder(object):
@@ -134,7 +144,7 @@ STDOUT.write({formatter})
 
     @inlineCallbacks
     def start_download(self, file_number, request_id):
-        status = DownloadStatus(file_number, request_id)
+        status = DownloadStatus(self.jinja_env, file_number, request_id)
         self.download_status[request_id] = status
 
         documents = json.loads((yield self._execute_connect_vbms(
@@ -180,12 +190,11 @@ STDOUT.write({formatter})
     def download_zip(self, request, request_id):
         status = self.download_status[request_id]
         assert status.completed
-        status.zipfile.close()
 
         request.setHeader("Content-Type", "application/zip")
-        contents = status._io.getvalue()
+
         del self.download_status[request_id]
-        return contents
+        return status.finalize_zip_contents()
 
 
 def main(reactor):

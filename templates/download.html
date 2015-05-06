@@ -25,7 +25,7 @@
 
         {% if status.has_manifest %}
             {% if not status.completed %}
-                <p>
+                <p class="lead">
                     We're downloading all of the files in the eFolder now. This
                     should just take a moment.
                 </p>
@@ -39,7 +39,7 @@
                 {% endfor %}
             </ul>
         {% else %}
-            <p>
+            <p class="lead">
                 We are gathering the list of files in the eFolder now, please be
                 patient.
             </p>
