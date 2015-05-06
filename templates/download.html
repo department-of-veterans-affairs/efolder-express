@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+    {% if not status.completed %}
+        <meta http-equiv="refresh" content="5" />
+    {% endif %}
+{% endblock %}
+
+{% block body %}
+    <div class="jumbotron">
+        <h2>Download status for <code>{{ status.file_number }}</code></h2>
+
+        {% if status.completed %}
+            <br />
+            <a href="/download/{{ status.request_id }}/zip/" class="btn btn-primary btn-lg btn-block">Download .zip!</a>
+            <br />
+            <br />
+        {% else %}
+            <div class="progress">
+                <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="{{ status.percent_completed }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ status.percent_completed }}%">
+                    <span class="sr-only">{{ status.percent_completed }}% Complete</span>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if status.has_manifest %}
+            <ul class="list-group">
+                {% for doc in status.manifest %}
+                    <li class="list-group-item list-group-item-{% if doc.completed %}success{% else %}warning{% endif %}">
+                        <span class="glyphicon glyphicon-{% if doc.completed %}ok-sign{% else %}option-horizontal{% endif %}"></span>
+                        &nbsp;&nbsp;&nbsp;{{ doc.filename }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>
+                We are gathering the list of files in the eFolder now, please be
+                patient.
+            </p>
+        {% endif %}
+    </div>
+{% endblock %}
