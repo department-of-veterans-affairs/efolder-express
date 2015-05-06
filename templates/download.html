@@ -2,7 +2,7 @@
 
 {% block extra_head %}
     {% if not status.completed %}
-        <meta http-equiv="refresh" content="5" />
+        <meta http-equiv="refresh" content="2" />
     {% endif %}
 {% endblock %}
 
@@ -24,6 +24,12 @@
         {% endif %}
 
         {% if status.has_manifest %}
+            {% if not status.completed %}
+                <p>
+                    We're downloading all of the files in the eFolder now. This
+                    should just take a moment.
+                </p>
+            {% endif %}
             <ul class="list-group">
                 {% for doc in status.manifest %}
                     <li class="list-group-item list-group-item-{% if doc.completed %}success{% else %}warning{% endif %}">
