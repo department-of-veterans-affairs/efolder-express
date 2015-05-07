@@ -92,9 +92,10 @@ class DownloadStatus(object):
 class DownloadEFolder(object):
     app = klein.Klein()
 
-    def __init__(self, reactor, connect_vbms_path):
+    def __init__(self, reactor, connect_vbms_path, endpoint_url):
         self.reactor = reactor
         self._connect_vbms_path = connect_vbms_path
+        self._endpoint_url = endpoint_url
 
         self.jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(
@@ -117,7 +118,7 @@ require 'json'
 require '{connect_vbms_path}/src/vbms.rb'
 
 client = VBMS::Client.new(
-    "https://filenet.test.vbms.aide.oit.va.gov/vbmsp2-cms/streaming/eDocumentService-v4",
+    {endpoint_url!r},
     "/Users/alex_gaynor/projects/va/vbms-credentials/test/client3.jks",
     "/Users/alex_gaynor/projects/va/vbms-credentials/test/samlToken-cui-tst.xml",
     nil,
@@ -130,6 +131,8 @@ result = client.send(request)
 STDOUT.write({formatter})
         """.format(
             connect_vbms_path=self._connect_vbms_path,
+            endpoint_url=self._endpoint_url,
+
             request=request,
             formatter=formatter,
         ).strip()
@@ -206,6 +209,7 @@ def main(reactor):
     app = DownloadEFolder(
         reactor,
         connect_vbms_path="/Users/alex_gaynor/projects/va/connect_vbms/",
+        endpoint_url="https://filenet.test.vbms.aide.oit.va.gov/vbmsp2-cms/streaming/eDocumentService-v4",
     )
     reactor.listenTCP(8080, Site(app.app.resource()), interface="localhost")
     return Deferred()
