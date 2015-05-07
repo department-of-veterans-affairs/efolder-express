@@ -92,8 +92,9 @@ class DownloadStatus(object):
 class DownloadEFolder(object):
     app = klein.Klein()
 
-    def __init__(self, reactor):
+    def __init__(self, reactor, connect_vbms_path):
         self.reactor = reactor
+        self._connect_vbms_path = connect_vbms_path
 
         self.jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(
@@ -113,7 +114,7 @@ class DownloadEFolder(object):
 
 require 'json'
 
-require '/Users/alex_gaynor/projects/va/connect_vbms/src/vbms.rb'
+require '{connect_vbms_path}/src/vbms.rb'
 
 client = VBMS::Client.new(
     "https://filenet.test.vbms.aide.oit.va.gov/vbmsp2-cms/streaming/eDocumentService-v4",
@@ -127,7 +128,11 @@ client = VBMS::Client.new(
 request = {request}
 result = client.send(request)
 STDOUT.write({formatter})
-        """.format(request=request, formatter=formatter).strip()
+        """.format(
+            connect_vbms_path=self._connect_vbms_path,
+            request=request,
+            formatter=formatter,
+        ).strip()
         with tempfile.NamedTemporaryFile(suffix=".rb", delete=False) as f:
             f.write(ruby_code)
 
@@ -138,7 +143,7 @@ STDOUT.write({formatter})
             "/Users/alex_gaynor/.gem/ruby/2.0.0/bin/bundle",
             ["exec", f.name],
             env=os.environ,
-            path="/Users/alex_gaynor/projects/va/connect_vbms/",
+            path=self._connect_vbms_path,
             reactor=self.reactor
         )
 
@@ -198,7 +203,10 @@ STDOUT.write({formatter})
 
 
 def main(reactor):
-    app = DownloadEFolder(reactor)
+    app = DownloadEFolder(
+        reactor,
+        connect_vbms_path="/Users/alex_gaynor/projects/va/connect_vbms/",
+    )
     reactor.listenTCP(8080, Site(app.app.resource()), interface="localhost")
     return Deferred()
 
