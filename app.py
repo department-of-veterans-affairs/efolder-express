@@ -92,10 +92,13 @@ class DownloadStatus(object):
 class DownloadEFolder(object):
     app = klein.Klein()
 
-    def __init__(self, reactor, connect_vbms_path, endpoint_url):
+    def __init__(self, reactor, connect_vbms_path, endpoint_url, keyfile,
+                 samlfile):
         self.reactor = reactor
         self._connect_vbms_path = connect_vbms_path
         self._endpoint_url = endpoint_url
+        self._keyfile = keyfile
+        self._samlfile = samlfile
 
         self.jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(
@@ -119,8 +122,8 @@ require '{connect_vbms_path}/src/vbms.rb'
 
 client = VBMS::Client.new(
     {endpoint_url!r},
-    "/Users/alex_gaynor/projects/va/vbms-credentials/test/client3.jks",
-    "/Users/alex_gaynor/projects/va/vbms-credentials/test/samlToken-cui-tst.xml",
+    {keyfile!r},
+    {samlfile!r},
     nil,
     "importkey",
     nil,
@@ -132,6 +135,8 @@ STDOUT.write({formatter})
         """.format(
             connect_vbms_path=self._connect_vbms_path,
             endpoint_url=self._endpoint_url,
+            keyfile=self._keyfile,
+            samlfile=self._samlfile,
 
             request=request,
             formatter=formatter,
@@ -210,6 +215,8 @@ def main(reactor):
         reactor,
         connect_vbms_path="/Users/alex_gaynor/projects/va/connect_vbms/",
         endpoint_url="https://filenet.test.vbms.aide.oit.va.gov/vbmsp2-cms/streaming/eDocumentService-v4",
+        keyfile="/Users/alex_gaynor/projects/va/vbms-credentials/test/client3.jks",
+        samlfile="/Users/alex_gaynor/projects/va/vbms-credentials/test/samlToken-cui-tst.xml",
     )
     reactor.listenTCP(8080, Site(app.app.resource()), interface="localhost")
     return Deferred()
