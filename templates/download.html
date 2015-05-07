@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-    {% if not status.completed %}
+    {% if not status.completed and not status.errored %}
         <meta http-equiv="refresh" content="2" />
     {% endif %}
 {% endblock %}
@@ -15,6 +15,12 @@
             <a href="/download/{{ status.request_id }}/zip/" class="btn btn-primary btn-lg btn-block">Download .zip!</a>
             <br />
             <br />
+        {% elif status.errored %}
+            <p class="lead">
+                There was an error getting the list of files in this eFolder.
+                This can either indicate that you entered an incorrect file
+                number, or that VBMS is having a problem.
+            </p>
         {% else %}
             <div class="progress">
                 <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="{{ status.percent_completed }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ status.percent_completed }}%">
@@ -38,7 +44,7 @@
                     </li>
                 {% endfor %}
             </ul>
-        {% else %}
+        {% elif not status.errored %}
             <p class="lead">
                 We are gathering the list of files in the eFolder now, please be
                 patient.

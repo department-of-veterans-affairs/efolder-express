@@ -54,6 +54,7 @@ class DownloadStatus(object):
 
         self.has_manifest = False
         self.manifest = []
+        self.errored = None
 
         self._io = io.BytesIO()
         self.zipfile = zipfile.ZipFile(self._io, "w")
@@ -196,10 +197,14 @@ STDOUT.write({formatter})
         status = DownloadStatus(self.jinja_env, file_number, request_id)
         self.download_status[request_id] = status
 
-        documents = json.loads((yield self._execute_connect_vbms(
-            "VBMS::Requests::ListDocuments.new({!r})".format(file_number),
-            'result.map(&:to_h).to_json'
-        )))
+        try:
+            documents = json.loads((yield self._execute_connect_vbms(
+                "VBMS::Requests::ListDocuments.new({!r})".format(file_number),
+                'result.map(&:to_h).to_json'
+            )))
+        except IOError:
+            log.err()
+            status.errored = True
 
         for doc in documents:
             document = Document.from_json(doc)
@@ -230,7 +235,7 @@ STDOUT.write({formatter})
 
         request_id = str(uuid.uuid4())
 
-        self.start_download(file_number, request_id).addErrback(log.err)
+        self.start_download(file_number, request_id)
 
         request.redirect("/download/{}/".format(request_id))
         return succeed(None)
