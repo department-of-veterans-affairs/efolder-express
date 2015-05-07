@@ -197,20 +197,36 @@ STDOUT.write({formatter})
         status = DownloadStatus(self.jinja_env, file_number, request_id)
         self.download_status[request_id] = status
 
+        log.msg(json.dumps({
+            "event": "list_documents.start",
+            "request_id": request_id,
+            "file_number": file_number,
+        }))
         try:
             documents = json.loads((yield self._execute_connect_vbms(
                 "VBMS::Requests::ListDocuments.new({!r})".format(file_number),
                 'result.map(&:to_h).to_json'
             )))
         except IOError:
+            log.msg(json.dumps({
+                "event": "list_documents.error",
+                "file_number": file_number,
+                "request_id": request_id,
+            }))
             log.err()
             status.errored = True
+        else:
+            log.msg(json.dumps({
+                "event": "list_documents.success",
+                "file_number": file_number,
+                "request_id": request_id,
+            }))
 
-        for doc in documents:
-            document = Document.from_json(doc)
-            status.add_document(document)
+            for doc in documents:
+                document = Document.from_json(doc)
+                status.add_document(document)
 
-            self.start_file_download(status, document)
+                self.start_file_download(status, document)
 
     @inlineCallbacks
     def start_file_download(self, status, document):
@@ -257,6 +273,7 @@ STDOUT.write({formatter})
 
 
 def main(reactor):
+    log.startLogging(sys.stdout)
     app = DownloadEFolder.from_config(
         reactor,
         Path(__file__).parent.joinpath("config", "test.yml"),
