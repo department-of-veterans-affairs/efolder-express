@@ -94,10 +94,11 @@ class DownloadStatus(object):
 class DownloadEFolder(object):
     app = klein.Klein()
 
-    def __init__(self, reactor, connect_vbms_path, endpoint_url, keyfile,
-                 samlfile, key, keypass, ca_cert, client_cert):
+    def __init__(self, reactor, connect_vbms_path, bundle_path, endpoint_url,
+                 keyfile, samlfile, key, keypass, ca_cert, client_cert):
         self.reactor = reactor
         self._connect_vbms_path = connect_vbms_path
+        self._bundle_path = bundle_path
         self._endpoint_url = endpoint_url
         self._keyfile = keyfile
         self._samlfile = samlfile
@@ -122,6 +123,7 @@ class DownloadEFolder(object):
         return cls(
             reactor,
             connect_vbms_path=config["connect_vbms"]["path"],
+            bundle_path=config["connect_vbms"]["bundle_path"],
             endpoint_url=config["vbms"]["endpoint_url"],
             keyfile=config["vbms"]["keyfile"],
             samlfile=config["vbms"]["samlfile"],
@@ -180,7 +182,7 @@ STDOUT.write({formatter})
         os.chmod(f.name, st.st_mode | stat.S_IEXEC)
 
         return getProcessOutput(
-            "/Users/alex_gaynor/.gem/ruby/2.0.0/bin/bundle",
+            self._bundle_path,
             ["exec", f.name],
             env=os.environ,
             path=self._connect_vbms_path,
