@@ -93,12 +93,13 @@ class DownloadEFolder(object):
     app = klein.Klein()
 
     def __init__(self, reactor, connect_vbms_path, endpoint_url, keyfile,
-                 samlfile):
+                 samlfile, key):
         self.reactor = reactor
         self._connect_vbms_path = connect_vbms_path
         self._endpoint_url = endpoint_url
         self._keyfile = keyfile
         self._samlfile = samlfile
+        self._key = key
 
         self.jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(
@@ -113,6 +114,12 @@ class DownloadEFolder(object):
         t = self.jinja_env.get_template(template_name)
         return t.render(data)
 
+    def _path_to_ruby(self, path):
+        if path is None:
+            return "nil"
+        else:
+            return repr(path)
+
     def _execute_connect_vbms(self, request, formatter):
         ruby_code = """#!/usr/bin/env ruby
 
@@ -122,9 +129,9 @@ require '{connect_vbms_path}/src/vbms.rb'
 
 client = VBMS::Client.new(
     {endpoint_url!r},
-    {keyfile!r},
-    {samlfile!r},
-    nil,
+    {keyfile},
+    {samlfile},
+    {key},
     "importkey",
     nil,
     nil,
@@ -135,8 +142,9 @@ STDOUT.write({formatter})
         """.format(
             connect_vbms_path=self._connect_vbms_path,
             endpoint_url=self._endpoint_url,
-            keyfile=self._keyfile,
-            samlfile=self._samlfile,
+            keyfile=self._path_to_ruby(self._keyfile),
+            samlfile=self._path_to_ruby(self._samlfile),
+            key=self._path_to_ruby(self._key),
 
             request=request,
             formatter=formatter,
@@ -217,6 +225,7 @@ def main(reactor):
         endpoint_url="https://filenet.test.vbms.aide.oit.va.gov/vbmsp2-cms/streaming/eDocumentService-v4",
         keyfile="/Users/alex_gaynor/projects/va/vbms-credentials/test/client3.jks",
         samlfile="/Users/alex_gaynor/projects/va/vbms-credentials/test/samlToken-cui-tst.xml",
+        key=None,
     )
     reactor.listenTCP(8080, Site(app.app.resource()), interface="localhost")
     return Deferred()
