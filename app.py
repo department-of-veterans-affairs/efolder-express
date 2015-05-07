@@ -61,7 +61,7 @@ class DownloadStatus(object):
 
     @property
     def _completed_count(self):
-        return sum(1 for doc in self.manifest if doc.completed)
+        return sum(1 for doc in self.manifest if doc.completed or doc.errored)
 
     @property
     def completed(self):
