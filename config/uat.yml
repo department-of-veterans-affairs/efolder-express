@@ -1,0 +1,13 @@
+# This configuration hits the VBSM "uat" environment
+
+vbms:
+    endpoint_url: https://filenet.uat.vbms.aide.oit.va.gov/vbmsp2-cms/streaming/eDocumentService-v4
+    keyfile: /Users/alex_gaynor/projects/va/vbms-credentials/uat/uat-w-key3.jks
+    samlfile: /Users/alex_gaynor/projects/va/vbms-credentials/uat/SamlTokenCUI-UAT.xml
+    key: /Users/alex_gaynor/projects/va/vbms-credentials/uat/CUI-UAT-Client.key
+    keypass: Password123.
+    ca_cert: /Users/alex_gaynor/projects/va/vbms-credentials/uat/ca2.crt
+    client_cert: /Users/alex_gaynor/projects/va/vbms-credentials/uat/CUI-UAT-Client.crt
+
+connect_vbms:
+    path: /Users/alex_gaynor/projects/va/connect_vbms/

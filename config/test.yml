@@ -1,3 +1,5 @@
+# This configuration hits the VBSM "test" environment
+
 vbms:
     endpoint_url: https://filenet.test.vbms.aide.oit.va.gov/vbmsp2-cms/streaming/eDocumentService-v4
     keyfile: /Users/alex_gaynor/projects/va/vbms-credentials/test/client3.jks
