@@ -1,0 +1,8 @@
+vbms:
+    endpoint_url: https://filenet.test.vbms.aide.oit.va.gov/vbmsp2-cms/streaming/eDocumentService-v4
+    keyfile: /Users/alex_gaynor/projects/va/vbms-credentials/test/client3.jks
+    samlfile: /Users/alex_gaynor/projects/va/vbms-credentials/test/samlToken-cui-tst.xml
+    keypass: importkey
+
+connect_vbms:
+    path: /Users/alex_gaynor/projects/va/connect_vbms/

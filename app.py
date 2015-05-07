@@ -20,6 +20,8 @@ from twisted.internet.utils import getProcessOutput
 from twisted.python import log
 from twisted.web.server import Site
 
+import yaml
+
 
 class Document(object):
     def __init__(self, document_id, doc_type, filename, received_at, source):
@@ -112,6 +114,22 @@ class DownloadEFolder(object):
         )
 
         self.download_status = {}
+
+    @classmethod
+    def from_config(cls, reactor, config_path):
+        with config_path.open() as f:
+            config = yaml.safe_load(f)
+        return cls(
+            reactor,
+            connect_vbms_path=config["connect_vbms"]["path"],
+            endpoint_url=config["vbms"]["endpoint_url"],
+            keyfile=config["vbms"]["keyfile"],
+            samlfile=config["vbms"]["samlfile"],
+            key=config["vbms"].get("key"),
+            keypass=config["vbms"]["keypass"],
+            ca_cert=config["vbms"].get("ca_cert"),
+            client_cert=config["vbms"].get("client_cert"),
+        )
 
     def render_template(self, template_name, data={}):
         t = self.jinja_env.get_template(template_name)
@@ -225,16 +243,9 @@ STDOUT.write({formatter})
 
 
 def main(reactor):
-    app = DownloadEFolder(
+    app = DownloadEFolder.from_config(
         reactor,
-        connect_vbms_path="/Users/alex_gaynor/projects/va/connect_vbms/",
-        endpoint_url="https://filenet.test.vbms.aide.oit.va.gov/vbmsp2-cms/streaming/eDocumentService-v4",
-        keyfile="/Users/alex_gaynor/projects/va/vbms-credentials/test/client3.jks",
-        samlfile="/Users/alex_gaynor/projects/va/vbms-credentials/test/samlToken-cui-tst.xml",
-        key=None,
-        keypass="importkey",
-        ca_cert=None,
-        client_cert=None,
+        Path(__file__).parent.joinpath("config", "test.yml"),
     )
     reactor.listenTCP(8080, Site(app.app.resource()), interface="localhost")
     return Deferred()
