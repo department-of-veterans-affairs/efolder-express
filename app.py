@@ -83,9 +83,10 @@ class DownloadStatus(object):
         document.completed = True
 
     def finalize_zip_contents(self):
+        readme_template = self.jinja_env.get_template("readme.txt")
         self.zipfile.writestr(
             "{}-eFolder/README.txt".format(self.file_number),
-            self.jinja_env.get_template("readme.txt").render({"status": self}).encode(),
+            readme_template.render({"status": self}).encode(),
         )
         self.zipfile.close()
         return self._io.getvalue()
