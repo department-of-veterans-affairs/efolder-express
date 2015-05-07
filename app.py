@@ -93,13 +93,14 @@ class DownloadEFolder(object):
     app = klein.Klein()
 
     def __init__(self, reactor, connect_vbms_path, endpoint_url, keyfile,
-                 samlfile, key):
+                 samlfile, key, keypass):
         self.reactor = reactor
         self._connect_vbms_path = connect_vbms_path
         self._endpoint_url = endpoint_url
         self._keyfile = keyfile
         self._samlfile = samlfile
         self._key = key
+        self._keypass = keypass
 
         self.jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(
@@ -132,7 +133,7 @@ client = VBMS::Client.new(
     {keyfile},
     {samlfile},
     {key},
-    "importkey",
+    {keypass!r},
     nil,
     nil,
 )
@@ -145,6 +146,7 @@ STDOUT.write({formatter})
             keyfile=self._path_to_ruby(self._keyfile),
             samlfile=self._path_to_ruby(self._samlfile),
             key=self._path_to_ruby(self._key),
+            keypass=self._keypass,
 
             request=request,
             formatter=formatter,
@@ -226,6 +228,7 @@ def main(reactor):
         keyfile="/Users/alex_gaynor/projects/va/vbms-credentials/test/client3.jks",
         samlfile="/Users/alex_gaynor/projects/va/vbms-credentials/test/samlToken-cui-tst.xml",
         key=None,
+        keypass="importkey",
     )
     reactor.listenTCP(8080, Site(app.app.resource()), interface="localhost")
     return Deferred()
