@@ -230,6 +230,12 @@ STDOUT.write({formatter})
 
     @inlineCallbacks
     def start_file_download(self, status, document):
+        log.msg(json.dumps({
+            "event": "get_document.start",
+            "request_id": status.request_id,
+            "file_number": status.file_number,
+            "document_id": document.document_id,
+        }))
         try:
             contents = yield self._execute_connect_vbms(
                 "VBMS::Requests::FetchDocumentById.new({!r})".format(str(document.document_id)),
@@ -237,8 +243,20 @@ STDOUT.write({formatter})
             )
         except IOError:
             log.err()
+            log.msg(json.dumps({
+                "event": "get_document.error",
+                "request_id": status.request_id,
+                "file_number": status.file_number,
+                "document_id": document.document_id,
+            }))
             document.errored = True
         else:
+            log.msg(json.dumps({
+                "event": "get_document.success",
+                "request_id": status.request_id,
+                "file_number": status.file_number,
+                "document_id": document.document_id,
+            }))
             status.add_document_contents(document, contents)
 
     @app.route("/")
@@ -278,7 +296,7 @@ def main(reactor):
         reactor,
         Path(__file__).parent.joinpath("config", "test.yml"),
     )
-    reactor.listenTCP(8080, Site(app.app.resource()), interface="localhost")
+    reactor.listenTCP(8080, Site(app.app.resource(), logPath="/dev/null"), interface="localhost")
     return Deferred()
 
 
