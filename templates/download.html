@@ -32,8 +32,8 @@
             {% endif %}
             <ul class="list-group">
                 {% for doc in status.manifest %}
-                    <li class="list-group-item list-group-item-{% if doc.completed %}success{% else %}warning{% endif %}">
-                        <span class="glyphicon glyphicon-{% if doc.completed %}ok-sign{% else %}option-horizontal{% endif %}"></span>
+                    <li class="list-group-item list-group-item-{% if doc.completed %}success{% elif doc.errored %}danger{% else %}warning{% endif %}">
+                        <span class="glyphicon glyphicon-{% if doc.completed %}ok-sign{% elif doc.errored %}remove-sign{% else %}option-horizontal{% endif %}"></span>
                         &nbsp;&nbsp;&nbsp;{{ doc.filename }}
                     </li>
                 {% endfor %}

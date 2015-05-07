@@ -32,6 +32,7 @@ class Document(object):
         self.source = source
 
         self.completed = False
+        self.errored = False
 
     @classmethod
     def from_json(cls, data):
@@ -204,15 +205,20 @@ STDOUT.write({formatter})
             document = Document.from_json(doc)
             status.add_document(document)
 
-            self.start_file_download(status, document).addErrback(log.err)
+            self.start_file_download(status, document)
 
     @inlineCallbacks
     def start_file_download(self, status, document):
-        contents = yield self._execute_connect_vbms(
-            "VBMS::Requests::FetchDocumentById.new({!r})".format(str(document.document_id)),
-            "result.content",
-        )
-        status.add_document_contents(document, contents)
+        try:
+            contents = yield self._execute_connect_vbms(
+                "VBMS::Requests::FetchDocumentById.new({!r})".format(str(document.document_id)),
+                "result.content",
+            )
+        except IOError:
+            log.err()
+            document.errored = True
+        else:
+            status.add_document_contents(document, contents)
 
     @app.route("/")
     def index(self, request):
