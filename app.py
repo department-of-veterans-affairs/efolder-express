@@ -289,7 +289,7 @@ STDOUT.write({formatter})
 
         request.setHeader("Content-Type", "application/zip")
         request.setHeader(
-            "Content-Disposition", "attachment; filename='{}-eFolder'".format(status.file_number)
+            "Content-Disposition", "attachment; filename='{}-eFolder.zip'".format(status.file_number)
         )
 
         del self.download_status[request_id]
