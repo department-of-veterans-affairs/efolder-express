@@ -288,6 +288,9 @@ STDOUT.write({formatter})
         assert status.completed
 
         request.setHeader("Content-Type", "application/zip")
+        request.setHeader(
+            "Content-Disposition", "attachment; filename='{}-eFolder'".format(status.file_number)
+        )
 
         del self.download_status[request_id]
         return status.finalize_zip_contents()
