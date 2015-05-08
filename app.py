@@ -14,7 +14,9 @@ import klein
 
 from pathlib import Path
 
-from twisted.internet.defer import Deferred, inlineCallbacks, succeed
+from twisted.internet.defer import (
+    Deferred, DeferredSemaphore, inlineCallbacks, succeed
+)
 from twisted.internet.task import react
 from twisted.internet.utils import getProcessOutput
 from twisted.python import log
@@ -116,6 +118,7 @@ class DownloadEFolder(object):
             ),
             autoescape=True
         )
+        self._connect_vbms_semaphore = DeferredSemaphore(tokens=8)
 
         self.download_status = {}
 
@@ -184,13 +187,13 @@ STDOUT.write({formatter})
         st = os.stat(f.name)
         os.chmod(f.name, st.st_mode | stat.S_IEXEC)
 
-        return getProcessOutput(
+        return self._connect_vbms_semaphore.run(lambda: getProcessOutput(
             self._bundle_path,
             ["exec", f.name],
             env=os.environ,
             path=self._connect_vbms_path,
             reactor=self.reactor
-        )
+        ))
 
     @inlineCallbacks
     def start_download(self, file_number, request_id):
