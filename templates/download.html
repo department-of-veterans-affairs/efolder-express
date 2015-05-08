@@ -16,11 +16,17 @@
             <br />
             <br />
         {% elif status.errored %}
-            <p class="lead">
-                There was an error getting the list of files in this eFolder.
-                This can either indicate that you entered an incorrect file
-                number, or that VBMS is having a problem.
-            </p>
+            <div class="alert alert-danger" role="alert">
+                <p class="lead">
+                    There was an error getting the list of files in this eFolder.
+                    This can either indicate that you entered an incorrect file
+                    number, or that VBMS is having a problem.
+
+                    <br />
+                    <br />
+                    <p class="text-center"><a href="/">Click here to try again.</a></p>
+                </p>
+            </div>
         {% else %}
             <div class="progress">
                 <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="{{ status.percent_completed }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ status.percent_completed }}%">
