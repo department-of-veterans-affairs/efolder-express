@@ -303,7 +303,7 @@ def main(reactor, config_path):
         reactor,
         Path(config_path),
     )
-    reactor.listenTCP(8080, Site(app.app.resource(), logPath="/dev/null"), interface="localhost")
+    reactor.listenTCP(8080, Site(app.app.resource(), logPath="/dev/null"), interface="0.0.0.0")
     return Deferred()
 
 
