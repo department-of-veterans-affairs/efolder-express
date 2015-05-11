@@ -269,6 +269,7 @@ STDOUT.write({formatter})
     @app.route("/download/", methods=["POST"])
     def download(self, request):
         file_number = request.args["file_number"][0]
+        file_number = file_number.replace("-", "").replace(" ", "")
 
         request_id = str(uuid.uuid4())
 
