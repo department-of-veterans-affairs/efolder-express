@@ -296,11 +296,11 @@ STDOUT.write({formatter})
         return status.finalize_zip_contents()
 
 
-def main(reactor):
+def main(reactor, config_path):
     log.startLogging(sys.stdout)
     app = DownloadEFolder.from_config(
         reactor,
-        Path(__file__).parent.joinpath("config", "test.yml"),
+        Path(config_path),
     )
     reactor.listenTCP(8080, Site(app.app.resource(), logPath="/dev/null"), interface="localhost")
     return Deferred()
