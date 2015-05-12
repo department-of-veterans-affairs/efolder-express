@@ -1,0 +1,9 @@
+web:
+    build: .
+    command: python app.py config/test.yml
+    ports:
+        - "8080:8080"
+    volumes:
+        - .:/app/
+    environment:
+        PYTHONUNBUFFERED: 1
