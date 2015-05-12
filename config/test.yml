@@ -8,4 +8,4 @@ vbms:
 
 connect_vbms:
     path: /Users/alex_gaynor/projects/va/connect_vbms/
-    bundle_path: /Users/alex_gaynor/.gem/ruby/2.0.0/bin/bundle
+    bundle_path: /Users/alex_gaynor/.gem/ruby/2.2.0/bin/bundle

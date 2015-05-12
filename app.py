@@ -149,12 +149,15 @@ class DownloadEFolder(object):
         else:
             return repr(path)
 
-    def _execute_connect_vbms(self, request, formatter):
+    def _execute_connect_vbms(self, request, formatter, args):
         ruby_code = """#!/usr/bin/env ruby
+
+$LOAD_PATH << '{connect_vbms_path}/src/'
 
 require 'json'
 
-require '{connect_vbms_path}/src/vbms.rb'
+require 'vbms'
+
 
 client = VBMS::Client.new(
     {endpoint_url!r},
@@ -168,6 +171,7 @@ client = VBMS::Client.new(
 request = {request}
 result = client.send(request)
 STDOUT.write({formatter})
+STDOUT.flush()
         """.format(
             connect_vbms_path=self._connect_vbms_path,
             endpoint_url=self._endpoint_url,
@@ -189,7 +193,7 @@ STDOUT.write({formatter})
 
         return self._connect_vbms_semaphore.run(lambda: getProcessOutput(
             self._bundle_path,
-            ["exec", f.name],
+            ["exec", f.name] + args,
             env=os.environ,
             path=self._connect_vbms_path,
             reactor=self.reactor
@@ -207,8 +211,9 @@ STDOUT.write({formatter})
         }))
         try:
             documents = json.loads((yield self._execute_connect_vbms(
-                "VBMS::Requests::ListDocuments.new({!r})".format(file_number),
-                'result.map(&:to_h).to_json'
+                "VBMS::Requests::ListDocuments.new(ARGV[0])",
+                'result.map(&:to_h).to_json',
+                [file_number],
             )))
         except IOError:
             log.msg(json.dumps({
@@ -241,8 +246,9 @@ STDOUT.write({formatter})
         }))
         try:
             contents = yield self._execute_connect_vbms(
-                "VBMS::Requests::FetchDocumentById.new({!r})".format(str(document.document_id)),
+                "VBMS::Requests::FetchDocumentById.new(ARGV[0])",
                 "result.content",
+                [str(document.document_id)],
             )
         except IOError:
             log.err()
