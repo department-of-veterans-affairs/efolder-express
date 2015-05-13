@@ -16,7 +16,6 @@ from pathlib import Path
 from twisted.internet.defer import (
     Deferred, DeferredSemaphore, inlineCallbacks, succeed, returnValue
 )
-from twisted.internet.task import react
 from twisted.internet.utils import getProcessOutput
 from twisted.python import log
 from twisted.web.server import Site
@@ -336,7 +335,3 @@ def main(reactor, config_path):
         interface="0.0.0.0"
     )
     return Deferred()
-
-
-if __name__ == "__main__":
-    react(main, sys.argv[1:])
