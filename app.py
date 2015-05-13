@@ -1,5 +1,4 @@
 import datetime
-import io
 import json
 import os
 import stat
@@ -58,7 +57,7 @@ class DownloadStatus(object):
         self.manifest = []
         self.errored = None
 
-        self._io = io.BytesIO()
+        self._io = tempfile.TemporaryFile()
         self.zipfile = zipfile.ZipFile(self._io, "w")
 
     @property
@@ -93,7 +92,8 @@ class DownloadStatus(object):
             readme_template.render({"status": self}).encode(),
         )
         self.zipfile.close()
-        return self._io.getvalue()
+        self._io.seek(0)
+        return self._io.read()
 
 
 class DownloadEFolder(object):
@@ -296,7 +296,8 @@ STDOUT.flush()
 
         request.setHeader("Content-Type", "application/zip")
         request.setHeader(
-            "Content-Disposition", "attachment; filename='{}-eFolder.zip'".format(status.file_number)
+            "Content-Disposition",
+            "attachment; filename='{}-eFolder.zip'".format(status.file_number)
         )
 
         del self.download_status[request_id]
@@ -309,7 +310,11 @@ def main(reactor, config_path):
         reactor,
         Path(config_path),
     )
-    reactor.listenTCP(8080, Site(app.app.resource(), logPath="/dev/null"), interface="0.0.0.0")
+    reactor.listenTCP(
+        8080,
+        Site(app.app.resource(), logPath="/dev/null"),
+        interface="0.0.0.0"
+    )
     return Deferred()
 
 
