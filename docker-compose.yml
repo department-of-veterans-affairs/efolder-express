@@ -1,9 +1,10 @@
 web:
     build: .
-    command: python app.py config/test.yml
+    command: python efolder_express/app.py config/test.yml
     ports:
         - "8080:8080"
     volumes:
         - .:/app/
     environment:
         PYTHONUNBUFFERED: 1
+        PYTHONPATH: /app/
