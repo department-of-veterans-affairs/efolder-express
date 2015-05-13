@@ -4,7 +4,6 @@ import os
 import stat
 import sys
 import tempfile
-import time
 import uuid
 import zipfile
 
@@ -24,39 +23,8 @@ from twisted.web.server import Site
 
 import yaml
 
-
-def dict_merge(d1, d2):
-    result = {}
-    result.update(d1)
-    result.update(d2)
-    return result
-
-
-class Timer(object):
-    def __init__(self, logger, event, start_time):
-        self.logger = logger
-        self.event = event
-        self.start_time = start_time
-
-    def stop(self):
-        duration = time.time() - self.start_time
-        self.logger.bind(duration=duration).emit(self.event)
-
-
-class Logger(object):
-    def __init__(self, log, data=None):
-        self._log = log
-        self._data = data or {}
-
-    def bind(self, **kwargs):
-        return Logger(self._log, dict_merge(self._data, kwargs))
-
-    def emit(self, event):
-        self._log.msg(json.dumps(dict_merge(self._data, {"event": event})))
-
-    def time(self, event):
-        start = time.time()
-        return Timer(self, event, start)
+from efolder_express.log import Logger
+from efolder_express.utils import DeferredValue
 
 
 class Document(object):
@@ -121,11 +89,14 @@ class DownloadStatus(object):
         )
         document.completed = True
 
-    def finalize_zip_contents(self):
+    def finalize_zip_contents(self, document_types):
         readme_template = self.jinja_env.get_template("readme.txt")
         self.zipfile.writestr(
             "{}-eFolder/README.txt".format(self.file_number),
-            readme_template.render({"status": self}).encode(),
+            readme_template.render({
+                "status": self,
+                "document_types": document_types,
+            }).encode(),
         )
         self.zipfile.close()
         self._io.seek(0)
@@ -153,13 +124,14 @@ class DownloadEFolder(object):
 
         self.jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(
-                str(Path(__file__).parent.joinpath("templates")),
+                str(Path(__file__).parent.parent.joinpath("templates")),
             ),
             autoescape=True
         )
         self._connect_vbms_semaphore = DeferredSemaphore(tokens=8)
 
         self.download_status = {}
+        self.document_types = DeferredValue()
 
     @classmethod
     def from_config(cls, reactor, logger, config_path):
@@ -299,6 +271,19 @@ STDOUT.flush()
             logger.emit("get_document.success")
             status.add_document_contents(document, contents)
 
+    @inlineCallbacks
+    def start_fetch_document_types(self):
+        contents = json.loads((yield self._execute_connect_vbms(
+            self.logger.bind(process="GetDocumentTypes"),
+            "VBMS::Requests::GetDocumentTypes.new()",
+            "result.map(&:to_h).to_json",
+            [],
+        )))
+        self.document_types.completed({
+            int(c["type_id"]): c["description"]
+            for c in contents
+        })
+
     @app.route("/")
     def index(self, request):
         return self.render_template("index.html")
@@ -321,6 +306,7 @@ STDOUT.flush()
         return self.render_template("download.html", {"status": status})
 
     @app.route("/download/<request_id>/zip/")
+    @inlineCallbacks
     def download_zip(self, request, request_id):
         status = self.download_status[request_id]
         assert status.completed
@@ -332,7 +318,8 @@ STDOUT.flush()
         )
 
         del self.download_status[request_id]
-        return status.finalize_zip_contents()
+        document_types = yield self.document_types.wait()
+        returnValue(status.finalize_zip_contents(document_types))
 
 
 def main(reactor, config_path):
@@ -342,6 +329,7 @@ def main(reactor, config_path):
         Logger(log),
         Path(config_path),
     )
+    app.start_fetch_document_types()
     reactor.listenTCP(
         8080,
         Site(app.app.resource(), logPath="/dev/null"),
