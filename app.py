@@ -24,6 +24,25 @@ from twisted.web.server import Site
 import yaml
 
 
+def dict_merge(d1, d2):
+    result = {}
+    result.update(d1)
+    result.update(d2)
+    return result
+
+
+class Logger(object):
+    def __init__(self, log, data=None):
+        self._log = log
+        self._data = data or {}
+
+    def bind(self, **kwargs):
+        return Logger(self._log, dict_merge(self._data, kwargs))
+
+    def emit(self, event):
+        self._log.msg(json.dumps(dict_merge(self._data, {"event": event})))
+
+
 class Document(object):
     def __init__(self, document_id, doc_type, filename, received_at, source):
         self.document_id = document_id
@@ -47,7 +66,8 @@ class Document(object):
 
 
 class DownloadStatus(object):
-    def __init__(self, jinja_env, file_number, request_id):
+    def __init__(self, logger, jinja_env, file_number, request_id):
+        self.logger = logger
         self.jinja_env = jinja_env
 
         self.file_number = file_number
@@ -99,9 +119,12 @@ class DownloadStatus(object):
 class DownloadEFolder(object):
     app = klein.Klein()
 
-    def __init__(self, reactor, connect_vbms_path, bundle_path, endpoint_url,
-                 keyfile, samlfile, key, keypass, ca_cert, client_cert):
+    def __init__(self, reactor, logger, connect_vbms_path, bundle_path,
+                 endpoint_url, keyfile, samlfile, key, keypass, ca_cert,
+                 client_cert):
         self.reactor = reactor
+        self.logger = logger
+
         self._connect_vbms_path = connect_vbms_path
         self._bundle_path = bundle_path
         self._endpoint_url = endpoint_url
@@ -123,11 +146,12 @@ class DownloadEFolder(object):
         self.download_status = {}
 
     @classmethod
-    def from_config(cls, reactor, config_path):
+    def from_config(cls, reactor, logger, config_path):
         with config_path.open() as f:
             config = yaml.safe_load(f)
         return cls(
             reactor,
+            logger,
             connect_vbms_path=config["connect_vbms"]["path"],
             bundle_path=config["connect_vbms"]["bundle_path"],
             endpoint_url=config["vbms"]["endpoint_url"],
@@ -201,14 +225,15 @@ STDOUT.flush()
 
     @inlineCallbacks
     def start_download(self, file_number, request_id):
-        status = DownloadStatus(self.jinja_env, file_number, request_id)
+        logger = self.logger.bind(
+            file_number=file_number, request_id=request_id
+        )
+        status = DownloadStatus(
+            logger, self.jinja_env, file_number, request_id
+        )
         self.download_status[request_id] = status
 
-        log.msg(json.dumps({
-            "event": "list_documents.start",
-            "request_id": request_id,
-            "file_number": file_number,
-        }))
+        logger.emit("list_documents.start")
         try:
             documents = json.loads((yield self._execute_connect_vbms(
                 "VBMS::Requests::ListDocuments.new(ARGV[0])",
@@ -216,19 +241,11 @@ STDOUT.flush()
                 [file_number],
             )))
         except IOError:
-            log.msg(json.dumps({
-                "event": "list_documents.error",
-                "file_number": file_number,
-                "request_id": request_id,
-            }))
+            logger.emit("list_documents.error")
             log.err()
             status.errored = True
         else:
-            log.msg(json.dumps({
-                "event": "list_documents.success",
-                "file_number": file_number,
-                "request_id": request_id,
-            }))
+            logger.emit("list_documents.success")
 
             for doc in documents:
                 document = Document.from_json(doc)
@@ -238,12 +255,9 @@ STDOUT.flush()
 
     @inlineCallbacks
     def start_file_download(self, status, document):
-        log.msg(json.dumps({
-            "event": "get_document.start",
-            "request_id": status.request_id,
-            "file_number": status.file_number,
-            "document_id": document.document_id,
-        }))
+        logger = status.logger.bind(document_id=document.document_id)
+        logger.emit("get_document.start")
+
         try:
             contents = yield self._execute_connect_vbms(
                 "VBMS::Requests::FetchDocumentById.new(ARGV[0])",
@@ -251,21 +265,11 @@ STDOUT.flush()
                 [str(document.document_id)],
             )
         except IOError:
+            logger.emit("get_document.error")
             log.err()
-            log.msg(json.dumps({
-                "event": "get_document.error",
-                "request_id": status.request_id,
-                "file_number": status.file_number,
-                "document_id": document.document_id,
-            }))
             document.errored = True
         else:
-            log.msg(json.dumps({
-                "event": "get_document.success",
-                "request_id": status.request_id,
-                "file_number": status.file_number,
-                "document_id": document.document_id,
-            }))
+            logger.emit("get_document.success")
             status.add_document_contents(document, contents)
 
     @app.route("/")
@@ -308,6 +312,7 @@ def main(reactor, config_path):
     log.startLogging(sys.stdout)
     app = DownloadEFolder.from_config(
         reactor,
+        Logger(log),
         Path(config_path),
     )
     reactor.listenTCP(
