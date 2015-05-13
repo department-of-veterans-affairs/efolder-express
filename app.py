@@ -4,6 +4,7 @@ import os
 import stat
 import sys
 import tempfile
+import time
 import uuid
 import zipfile
 
@@ -14,7 +15,7 @@ import klein
 from pathlib import Path
 
 from twisted.internet.defer import (
-    Deferred, DeferredSemaphore, inlineCallbacks, succeed
+    Deferred, DeferredSemaphore, inlineCallbacks, succeed, returnValue
 )
 from twisted.internet.task import react
 from twisted.internet.utils import getProcessOutput
@@ -31,6 +32,17 @@ def dict_merge(d1, d2):
     return result
 
 
+class Timer(object):
+    def __init__(self, logger, event, start_time):
+        self.logger = logger
+        self.event = event
+        self.start_time = start_time
+
+    def stop(self):
+        duration = time.time() - self.start_time
+        self.logger.bind(duration=duration).emit(self.event)
+
+
 class Logger(object):
     def __init__(self, log, data=None):
         self._log = log
@@ -41,6 +53,10 @@ class Logger(object):
 
     def emit(self, event):
         self._log.msg(json.dumps(dict_merge(self._data, {"event": event})))
+
+    def time(self, event):
+        start = time.time()
+        return Timer(self, event, start)
 
 
 class Document(object):
@@ -173,7 +189,7 @@ class DownloadEFolder(object):
         else:
             return repr(path)
 
-    def _execute_connect_vbms(self, request, formatter, args):
+    def _execute_connect_vbms(self, logger, request, formatter, args):
         ruby_code = """#!/usr/bin/env ruby
 
 $LOAD_PATH << '{connect_vbms_path}/src/'
@@ -215,13 +231,22 @@ STDOUT.flush()
         st = os.stat(f.name)
         os.chmod(f.name, st.st_mode | stat.S_IEXEC)
 
-        return self._connect_vbms_semaphore.run(lambda: getProcessOutput(
-            self._bundle_path,
-            ["exec", f.name] + args,
-            env=os.environ,
-            path=self._connect_vbms_path,
-            reactor=self.reactor
-        ))
+        @inlineCallbacks
+        def run():
+            timer = logger.time("process.spawn")
+            try:
+                result = yield getProcessOutput(
+                    self._bundle_path,
+                    ["exec", f.name] + args,
+                    env=os.environ,
+                    path=self._connect_vbms_path,
+                    reactor=self.reactor
+                )
+            finally:
+                timer.stop()
+            returnValue(result)
+
+        return self._connect_vbms_semaphore.run(run)
 
     @inlineCallbacks
     def start_download(self, file_number, request_id):
@@ -236,6 +261,7 @@ STDOUT.flush()
         logger.emit("list_documents.start")
         try:
             documents = json.loads((yield self._execute_connect_vbms(
+                logger.bind(process="ListDocuments"),
                 "VBMS::Requests::ListDocuments.new(ARGV[0])",
                 'result.map(&:to_h).to_json',
                 [file_number],
@@ -260,6 +286,7 @@ STDOUT.flush()
 
         try:
             contents = yield self._execute_connect_vbms(
+                logger.bind(process="FetchDocumentById"),
                 "VBMS::Requests::FetchDocumentById.new(ARGV[0])",
                 "result.content",
                 [str(document.document_id)],
