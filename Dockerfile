@@ -16,8 +16,7 @@ RUN apt-get install -y \
     zlib1g-dev \
     libxml2 \
     libxml2-dev \
-    libpq-dev \
-    libbcprov-java
+    libpq-dev
 
 COPY . /app/
 WORKDIR /app/
