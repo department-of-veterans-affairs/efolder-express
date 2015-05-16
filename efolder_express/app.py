@@ -19,6 +19,7 @@ from twisted.internet.defer import (
 from twisted.internet.utils import getProcessOutput
 from twisted.python import log
 from twisted.web.server import Site
+from twisted.web.static import File
 
 import yaml
 
@@ -60,7 +61,7 @@ class DownloadStatus(object):
         self.manifest = []
         self.errored = None
 
-        self._io = tempfile.TemporaryFile()
+        self._io = tempfile.NamedTemporaryFile()
         self.zipfile = zipfile.ZipFile(self._io, "w")
 
     @property
@@ -89,17 +90,17 @@ class DownloadStatus(object):
         document.completed = True
 
     def finalize_zip_contents(self, document_types):
-        readme_template = self.jinja_env.get_template("readme.txt")
-        self.zipfile.writestr(
-            "{}-eFolder/README.txt".format(self.file_number),
-            readme_template.render({
-                "status": self,
-                "document_types": document_types,
-            }).encode(),
-        )
-        self.zipfile.close()
-        self._io.seek(0)
-        return self._io.read()
+        if self.zipfile.fp is not None:
+            readme_template = self.jinja_env.get_template("readme.txt")
+            self.zipfile.writestr(
+                "{}-eFolder/README.txt".format(self.file_number),
+                readme_template.render({
+                    "status": self,
+                    "document_types": document_types,
+                }).encode(),
+            )
+            self.zipfile.close()
+        return self._io.name
 
 
 class DownloadEFolder(object):
@@ -310,15 +311,17 @@ STDOUT.flush()
         status = self.download_status[request_id]
         assert status.completed
 
-        request.setHeader("Content-Type", "application/zip")
+        document_types = yield self.document_types.wait()
+        path = status.finalize_zip_contents(document_types)
+
         request.setHeader(
             "Content-Disposition",
             "attachment; filename='{}-eFolder.zip'".format(status.file_number)
         )
 
-        del self.download_status[request_id]
-        document_types = yield self.document_types.wait()
-        returnValue(status.finalize_zip_contents(document_types))
+        resource = File(path, defaultType="application/zip")
+        resource.isLeaf = True
+        returnValue(resource)
 
 
 def main(reactor, config_path):
