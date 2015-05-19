@@ -61,7 +61,7 @@ class DownloadStatus(object):
         self.manifest = []
         self.errored = None
 
-        self._io = tempfile.NamedTemporaryFile()
+        self._io = tempfile.NamedTemporaryFile(suffix=".zip")
         self.zipfile = zipfile.ZipFile(self._io, "w")
 
     @property
@@ -100,6 +100,7 @@ class DownloadStatus(object):
                 }).encode(),
             )
             self.zipfile.close()
+            self._io.flush()
         return self._io.name
 
 
