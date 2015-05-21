@@ -6,6 +6,7 @@ from twisted.python import usage, log
 from twisted.web.server import Site
 
 from efolder_express.app import DownloadEFolder
+from efolder_express.http import ForceHTTPSResource
 from efolder_express.log import Logger
 
 
@@ -24,13 +25,17 @@ def makeService(options):
         Path(options["config"]),
     )
     app.start_fetch_document_types()
-    site = Site(app.app.resource(), logPath="/dev/null")
 
     service = MultiService()
-    TCPServer(8080, site, reactor=reactor).setServiceParent(service)
+    TCPServer(
+        8080,
+        Site(ForceHTTPSResource(), logPath="/dev/null"),
+        reactor=reactor
+    ).setServiceParent(service)
+
     SSLServer(
         8081,
-        site,
+        Site(app.app.resource(), logPath="/dev/null"),
         app.certificate_options,
         reactor=reactor,
     ).setServiceParent(service)
