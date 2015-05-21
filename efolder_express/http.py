@@ -1,4 +1,3 @@
-from twisted.internet.defer import succeed
 from twisted.web import resource, server
 
 

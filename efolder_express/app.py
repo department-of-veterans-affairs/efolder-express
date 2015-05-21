@@ -10,8 +10,6 @@ import jinja2
 
 import klein
 
-from pathlib import Path
-
 from twisted.internet import ssl
 from twisted.internet.defer import (
     DeferredSemaphore, inlineCallbacks, succeed, returnValue
@@ -125,7 +123,7 @@ class DownloadEFolder(object):
 
         self.jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(
-                str(Path(__file__).parent.parent.joinpath("templates")),
+                FilePath(__file__).parent().parent().child("templates").path,
             ),
             autoescape=True
         )
@@ -136,7 +134,7 @@ class DownloadEFolder(object):
 
     @classmethod
     def from_config(cls, reactor, logger, config_path):
-        with config_path.open() as f:
+        with open(config_path) as f:
             config = yaml.safe_load(f)
 
         with open(config["tls"]["certificate"]) as f:

@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from twisted.application.internet import SSLServer, TCPServer
 from twisted.application.service import MultiService
 from twisted.python import usage, log
@@ -22,7 +20,7 @@ def makeService(options):
     app = DownloadEFolder.from_config(
         reactor,
         Logger(log),
-        Path(options["config"]),
+        options["config"],
     )
     app.start_fetch_document_types()
 
