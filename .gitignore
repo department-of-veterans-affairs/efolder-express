@@ -1,1 +1,3 @@
 *.py[co]
+twistd.pid
+dropin.cache

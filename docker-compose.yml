@@ -1,6 +1,6 @@
 web:
     build: .
-    command: python efolder_express config/test.yml
+    command: twistd -no efolder-express --config=config/test.yml
     ports:
         - "8080:8080"
     volumes:
