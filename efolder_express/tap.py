@@ -6,7 +6,7 @@ from twisted.python import usage, log
 from twisted.web.server import Site
 
 from efolder_express.app import DownloadEFolder
-from efolder_express.http import ForceHTTPSResource
+from efolder_express.http import ForceHTTPSResource, HSTSResource
 from efolder_express.log import Logger
 
 
@@ -36,7 +36,7 @@ def makeService(options):
 
     SSLServer(
         8081,
-        Site(app.app.resource(), logPath="/dev/null"),
+        Site(HSTSResource(app.app.resource()), logPath="/dev/null"),
         app.certificate_options,
         reactor=reactor,
     ).setServiceParent(service)
