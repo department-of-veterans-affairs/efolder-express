@@ -328,7 +328,7 @@ STDOUT.flush()
 
         request.setHeader(
             "Content-Disposition",
-            "attachment; filename='{}-eFolder.zip'".format(status.file_number)
+            "attachment; filename={}-eFolder.zip".format(status.file_number)
         )
 
         resource = File(path, defaultType="application/zip")
