@@ -2,7 +2,6 @@ import datetime
 import json
 import os
 import stat
-import sys
 import tempfile
 import uuid
 import zipfile
@@ -13,17 +12,17 @@ import klein
 
 from pathlib import Path
 
+from twisted.internet import ssl
 from twisted.internet.defer import (
-    Deferred, DeferredSemaphore, inlineCallbacks, succeed, returnValue
+    DeferredSemaphore, inlineCallbacks, succeed, returnValue
 )
 from twisted.internet.utils import getProcessOutput
 from twisted.python import log
-from twisted.web.server import Site
+from twisted.python.filepath import FilePath
 from twisted.web.static import File
 
 import yaml
 
-from efolder_express.log import Logger
 from efolder_express.utils import DeferredValue
 
 
@@ -107,11 +106,12 @@ class DownloadStatus(object):
 class DownloadEFolder(object):
     app = klein.Klein()
 
-    def __init__(self, reactor, logger, connect_vbms_path, bundle_path,
-                 endpoint_url, keyfile, samlfile, key, keypass, ca_cert,
-                 client_cert):
+    def __init__(self, reactor, logger, certificate_options, connect_vbms_path,
+                 bundle_path, endpoint_url, keyfile, samlfile, key, keypass,
+                 ca_cert, client_cert):
         self.reactor = reactor
         self.logger = logger
+        self.certificate_options = certificate_options
 
         self._connect_vbms_path = connect_vbms_path
         self._bundle_path = bundle_path
@@ -138,9 +138,22 @@ class DownloadEFolder(object):
     def from_config(cls, reactor, logger, config_path):
         with config_path.open() as f:
             config = yaml.safe_load(f)
+
+        with open(config["tls"]["certificate"]) as f:
+            certificate = ssl.PrivateCertificate.loadPEM(f.read())
+
+        certificate_options = ssl.CertificateOptions(
+            privateKey=certificate.privateKey.original,
+            certificate=certificate.original,
+            dhParameters=ssl.DiffieHellmanParameters.fromFile(
+                FilePath(config["tls"]["dh_parameters"]),
+            )
+        )
+
         return cls(
             reactor,
             logger,
+            certificate_options,
             connect_vbms_path=config["connect_vbms"]["path"],
             bundle_path=config["connect_vbms"]["bundle_path"],
             endpoint_url=config["vbms"]["endpoint_url"],
@@ -323,19 +336,3 @@ STDOUT.flush()
         resource = File(path, defaultType="application/zip")
         resource.isLeaf = True
         returnValue(resource)
-
-
-def main(reactor, config_path):
-    log.startLogging(sys.stdout)
-    app = DownloadEFolder.from_config(
-        reactor,
-        Logger(log),
-        Path(config_path),
-    )
-    app.start_fetch_document_types()
-    reactor.listenTCP(
-        8080,
-        Site(app.app.resource(), logPath="/dev/null"),
-        interface="0.0.0.0"
-    )
-    return Deferred()
