@@ -11,6 +11,7 @@ class ForceHTTPSResource(resource.Resource):
     def render(self, request):
         path = request.URLPath()
         path.scheme = "https"
+        # TODO: in production the netloc shouldn't change
         path.netloc = "localhost:8081"
 
         request.redirect(str(path))

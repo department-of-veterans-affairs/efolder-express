@@ -27,6 +27,7 @@ def makeService(options):
     app.start_fetch_document_types()
 
     service = MultiService()
+    # TODO: these should be 80 and 443 in production
     TCPServer(
         8080,
         Site(ForceHTTPSResource(), logPath="/dev/null"),
