@@ -4,14 +4,17 @@ from twisted.web import resource, server
 class ForceHTTPSResource(resource.Resource):
     isLeaf = True
 
+    def __init__(self, target_netloc):
+        self._target_netloc = target_netloc
+        resource.Resource.__init__(self)
+
     def getChild(self, name, request):
         return self
 
     def render(self, request):
         path = request.URLPath()
         path.scheme = "https"
-        # TODO: in production the netloc shouldn't change
-        path.netloc = "localhost:8081"
+        path.netloc = self._target_netloc
 
         request.redirect(str(path))
         request.finish()
