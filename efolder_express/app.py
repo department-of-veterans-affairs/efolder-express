@@ -32,6 +32,8 @@ class Document(object):
         self.received_at = received_at
         self.source = source
 
+        self._content_location = None
+
         self.completed = False
         self.errored = False
 
@@ -45,6 +47,13 @@ class Document(object):
             data["source"],
         )
 
+    def add_contents(self, contents):
+        with tempfile.NamedTemporaryFile(delete=False) as f:
+            f.write(contents)
+
+        self._content_location = f.name
+        self.completed = True
+
 
 class DownloadStatus(object):
     def __init__(self, logger, jinja_env, file_number, request_id):
@@ -57,9 +66,6 @@ class DownloadStatus(object):
         self.has_manifest = False
         self.manifest = []
         self.errored = None
-
-        self._io = tempfile.NamedTemporaryFile(suffix=".zip")
-        self.zipfile = zipfile.ZipFile(self._io, "w")
 
     @property
     def _completed_count(self):
@@ -79,26 +85,29 @@ class DownloadStatus(object):
         self.has_manifest = True
         self.manifest.append(document)
 
-    def add_document_contents(self, document, contents):
-        self.zipfile.writestr(
-            "{}-eFolder/{}".format(self.file_number, document.filename),
-            contents
-        )
-        document.completed = True
-
     def finalize_zip_contents(self, document_types):
-        if self.zipfile.fp is not None:
+        with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as f:
+            z = zipfile.ZipFile(f, "w", compression=zipfile.ZIP_DEFLATED)
+
+            for doc in self.manifest:
+                if doc.completed:
+                    z.write(
+                        doc._content_location,
+                        "{}-eFolder/{}".format(self.file_number, doc.filename),
+                    )
+
+
             readme_template = self.jinja_env.get_template("readme.txt")
-            self.zipfile.writestr(
+            z.writestr(
                 "{}-eFolder/README.txt".format(self.file_number),
                 readme_template.render({
                     "status": self,
                     "document_types": document_types,
                 }).encode(),
             )
-            self.zipfile.close()
-            self._io.flush()
-        return self._io.name
+            z.close()
+            f.flush()
+        return f.name
 
 
 class DownloadEFolder(object):
@@ -281,7 +290,7 @@ STDOUT.flush()
             document.errored = True
         else:
             logger.emit("get_document.success")
-            status.add_document_contents(document, contents)
+            document.add_contents(contents)
 
     @inlineCallbacks
     def start_fetch_document_types(self):
