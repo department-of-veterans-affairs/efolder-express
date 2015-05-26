@@ -1,10 +1,8 @@
-import datetime
 import json
 import os
 import stat
 import tempfile
 import uuid
-import zipfile
 
 import jinja2
 
@@ -12,7 +10,7 @@ import klein
 
 from twisted.internet import ssl
 from twisted.internet.defer import (
-    DeferredSemaphore, inlineCallbacks, succeed, returnValue
+    DeferredSemaphore, inlineCallbacks, returnValue
 )
 from twisted.internet.utils import getProcessOutput
 from twisted.python import log
@@ -21,103 +19,19 @@ from twisted.web.static import File
 
 import yaml
 
+from efolder_express.db import DownloadDatabase, Document
 from efolder_express.utils import DeferredValue
-
-
-class Document(object):
-    def __init__(self, document_id, doc_type, filename, received_at, source):
-        self.document_id = document_id
-        self.doc_type = doc_type
-        self.filename = filename
-        self.received_at = received_at
-        self.source = source
-
-        self._content_location = None
-
-        self.completed = False
-        self.errored = False
-
-    @classmethod
-    def from_json(cls, data):
-        return cls(
-            data["document_id"],
-            data["doc_type"],
-            data["filename"],
-            datetime.datetime.strptime(data["received_at"], "%Y-%m-%d").date(),
-            data["source"],
-        )
-
-    def add_contents(self, contents):
-        with tempfile.NamedTemporaryFile(delete=False) as f:
-            f.write(contents)
-
-        self._content_location = f.name
-        self.completed = True
-
-
-class DownloadStatus(object):
-    def __init__(self, logger, jinja_env, file_number, request_id):
-        self.logger = logger
-        self.jinja_env = jinja_env
-
-        self.file_number = file_number
-        self.request_id = request_id
-
-        self.has_manifest = False
-        self.manifest = []
-        self.errored = None
-
-    @property
-    def _completed_count(self):
-        return sum(1 for doc in self.manifest if doc.completed or doc.errored)
-
-    @property
-    def completed(self):
-        return self.manifest and self._completed_count == len(self.manifest)
-
-    @property
-    def percent_completed(self):
-        if not self.manifest:
-            return 5
-        return int(100 * (self._completed_count / float(len(self.manifest))))
-
-    def add_document(self, document):
-        self.has_manifest = True
-        self.manifest.append(document)
-
-    def finalize_zip_contents(self, document_types):
-        with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as f:
-            z = zipfile.ZipFile(f, "w", compression=zipfile.ZIP_DEFLATED)
-
-            for doc in self.manifest:
-                if doc.completed:
-                    z.write(
-                        doc._content_location,
-                        "{}-eFolder/{}".format(self.file_number, doc.filename),
-                    )
-
-
-            readme_template = self.jinja_env.get_template("readme.txt")
-            z.writestr(
-                "{}-eFolder/README.txt".format(self.file_number),
-                readme_template.render({
-                    "status": self,
-                    "document_types": document_types,
-                }).encode(),
-            )
-            z.close()
-            f.flush()
-        return f.name
 
 
 class DownloadEFolder(object):
     app = klein.Klein()
 
-    def __init__(self, reactor, logger, certificate_options, connect_vbms_path,
-                 bundle_path, endpoint_url, keyfile, samlfile, key, keypass,
-                 ca_cert, client_cert):
+    def __init__(self, reactor, logger, download_database, certificate_options,
+                 connect_vbms_path, bundle_path, endpoint_url, keyfile,
+                 samlfile, key, keypass, ca_cert, client_cert):
         self.reactor = reactor
         self.logger = logger
+        self.download_database = download_database
         self.certificate_options = certificate_options
 
         self._connect_vbms_path = connect_vbms_path
@@ -138,7 +52,6 @@ class DownloadEFolder(object):
         )
         self._connect_vbms_semaphore = DeferredSemaphore(tokens=8)
 
-        self.download_status = {}
         self.document_types = DeferredValue()
 
     @classmethod
@@ -160,6 +73,7 @@ class DownloadEFolder(object):
         return cls(
             reactor,
             logger,
+            DownloadDatabase(reactor, config["db"]["uri"]),
             certificate_options,
             connect_vbms_path=config["connect_vbms"]["path"],
             bundle_path=config["connect_vbms"]["bundle_path"],
@@ -246,10 +160,6 @@ STDOUT.flush()
         logger = self.logger.bind(
             file_number=file_number, request_id=request_id
         )
-        status = DownloadStatus(
-            logger, self.jinja_env, file_number, request_id
-        )
-        self.download_status[request_id] = status
 
         logger.emit("list_documents.start")
         try:
@@ -262,19 +172,21 @@ STDOUT.flush()
         except IOError:
             logger.emit("list_documents.error")
             log.err()
-            status.errored = True
+            yield self.download_database.mark_download_errored(request_id)
         else:
             logger.emit("list_documents.success")
 
+            documents = [
+                Document.from_json(request_id, doc)
+                for doc in documents
+            ]
+            yield self.download_database.create_documents(documents)
             for doc in documents:
-                document = Document.from_json(doc)
-                status.add_document(document)
-
-                self.start_file_download(status, document)
+                self.start_file_download(logger, request_id, doc)
 
     @inlineCallbacks
-    def start_file_download(self, status, document):
-        logger = status.logger.bind(document_id=document.document_id)
+    def start_file_download(self, logger, request_id, document):
+        logger = logger.bind(document_id=document.document_id)
         logger.emit("get_document.start")
 
         try:
@@ -287,10 +199,14 @@ STDOUT.flush()
         except IOError:
             logger.emit("get_document.error")
             log.err()
-            document.errored = True
+            yield self.download_database.mark_document_errored(document)
         else:
             logger.emit("get_document.success")
-            document.add_contents(contents)
+            with tempfile.NamedTemporaryFile(delete=False) as f:
+                f.write(contents)
+            yield self.download_database.set_document_content_location(
+                document, f.name
+            )
 
     @inlineCallbacks
     def start_fetch_document_types(self):
@@ -310,34 +226,43 @@ STDOUT.flush()
         return self.render_template("index.html")
 
     @app.route("/download/", methods=["POST"])
+    @inlineCallbacks
     def download(self, request):
         file_number = request.args["file_number"][0]
         file_number = file_number.replace("-", "").replace(" ", "")
 
         request_id = str(uuid.uuid4())
 
-        self.start_download(file_number, request_id)
+        yield self.download_database.create_download(request_id, file_number)
+        self.start_download(file_number, request_id).addErrback(log.err)
 
         request.redirect("/download/{}/".format(request_id))
-        return succeed(None)
+        returnValue(None)
 
     @app.route("/download/<request_id>/")
+    @inlineCallbacks
     def download_status(self, request, request_id):
-        status = self.download_status[request_id]
-        return self.render_template("download.html", {"status": status})
+        download = yield self.download_database.get_download(
+            request_id=request_id
+        )
+        returnValue(self.render_template("download.html", {
+            "status": download
+        }))
 
     @app.route("/download/<request_id>/zip/")
     @inlineCallbacks
     def download_zip(self, request, request_id):
-        status = self.download_status[request_id]
-        assert status.completed
+        download = yield self.download_database.get_download(
+            request_id=request_id
+        )
+        assert download.completed
 
         document_types = yield self.document_types.wait()
-        path = status.finalize_zip_contents(document_types)
+        path = download.build_zip(self.jinja_env, document_types)
 
         request.setHeader(
             "Content-Disposition",
-            "attachment; filename={}-eFolder.zip".format(status.file_number)
+            "attachment; filename={}-eFolder.zip".format(download.file_number)
         )
 
         resource = File(path, defaultType="application/zip")

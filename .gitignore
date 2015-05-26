@@ -1,3 +1,4 @@
 *.py[co]
 twistd.pid
 dropin.cache
+dev.db
