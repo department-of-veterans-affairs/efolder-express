@@ -73,7 +73,7 @@ class DownloadEFolder(object):
         return cls(
             reactor,
             logger,
-            DownloadDatabase(reactor, "sqlite:///{}".format(tempfile.mktemp(suffix=".db"))),
+            DownloadDatabase(reactor, config["db"]["uri"]),
             certificate_options,
             connect_vbms_path=config["connect_vbms"]["path"],
             bundle_path=config["connect_vbms"]["bundle_path"],

@@ -242,15 +242,18 @@ class DownloadDatabase(object):
 
     @inlineCallbacks
     def get_download(self, request_id):
-        download_row = (yield (yield self._engine.execute(self._downloads.select().where(
+        query = self._downloads.select().where(
             self._downloads.c.request_id == request_id
-        ))).first())
+        )
+        download_row = (yield (yield self._engine.execute(query)).first())
         if download_row is None:
             raise DownloadNotFound(request_id)
 
-        document_rows = yield self._engine.execute(self._documents.select().where(
+        query = self._documents.select().where(
             self._documents.c.download_id == request_id,
-        ))
+        )
+        document_rows = yield self._engine.execute(query)
+
         returnValue(DownloadStatus(
             request_id=download_row[self._downloads.c.request_id],
             file_number=download_row[self._downloads.c.file_number],

@@ -13,3 +13,6 @@ connect_vbms:
 tls:
     certificate: /Users/alex_gaynor/projects/va/download-efolder/dev/cert.pem
     dh_parameters: /Users/alex_gaynor/projects/va/download-efolder/dev/dhparams.pem
+
+db:
+    uri: sqlite:///dev.db
