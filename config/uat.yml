@@ -12,3 +12,10 @@ vbms:
 connect_vbms:
     path: /Users/alex_gaynor/projects/va/connect_vbms/
     bundle_path: /Users/alex_gaynor/.gem/ruby/2.0.0/bin/bundle
+
+tls:
+    certificate: /Users/alex_gaynor/projects/va/download-efolder/dev/cert.pem
+    dh_parameters: /Users/alex_gaynor/projects/va/download-efolder/dev/dhparams.pem
+
+db:
+    uri: sqlite:///dev-uat.db
