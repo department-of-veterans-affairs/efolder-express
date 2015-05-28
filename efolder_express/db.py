@@ -41,15 +41,19 @@ class DownloadStatus(object):
         )
         return int(100 * (completed / float(len(self.documents))))
 
-    def build_zip(self, jinja_env, document_types):
-        with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as f:
-            z = zipfile.ZipFile(f, "w", compression=zipfile.ZIP_DEFLATED)
-
+    def build_zip(self, jinja_env, fernet, document_types):
+        with zipfile.ZipFile(
+            tempfile.NamedTemporaryFile(suffix=".zip", delete=False),
+            "w",
+            compression=zipfile.ZIP_DEFLATED
+        ) as z:
             for doc in self.documents:
                 if doc.content_location:
-                    z.write(
-                        doc.content_location,
+                    with open(doc.content_location) as f:
+                        data = fernet.decrypt(f.read())
+                    z.writestr(
                         "{}-eFolder/{}".format(self.file_number, doc.filename),
+                        data,
                     )
 
             readme_template = jinja_env.get_template("readme.txt")
@@ -60,9 +64,7 @@ class DownloadStatus(object):
                     "document_types": document_types,
                 }).encode(),
             )
-            z.close()
-            f.flush()
-        return f.name
+        return z.filename
 
 
 class Document(object):

@@ -16,3 +16,6 @@ tls:
 
 db:
     uri: sqlite:///dev.db
+
+encryption_keys:
+    - "HA6EtTVMI0qTDnSSKtWdZxmJFA8lFb0NrJiZYiNsTYs="
