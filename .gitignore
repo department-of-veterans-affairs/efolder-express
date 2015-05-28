@@ -2,3 +2,4 @@
 twistd.pid
 dropin.cache
 dev.db
+docs/_build/
