@@ -114,6 +114,11 @@ class DownloadDatabase(object):
                 nullable=False,
             ),
             sqlalchemy.Column(
+                "started_at",
+                sqlalchemy.DateTime(),
+                nullable=False,
+            ),
+            sqlalchemy.Column(
                 "state",
                 sqlalchemy.Enum(
                     "STARTED",
@@ -206,6 +211,7 @@ class DownloadDatabase(object):
         return self._engine.execute(self._downloads.insert().values(
             request_id=request_id,
             file_number=file_number,
+            started_at=datetime.datetime.utcnow(),
             state="STARTED",
         ))
 
