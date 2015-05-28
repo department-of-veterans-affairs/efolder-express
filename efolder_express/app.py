@@ -4,6 +4,8 @@ import stat
 import tempfile
 import uuid
 
+from cryptography import fernet
+
 import jinja2
 
 import klein
@@ -26,12 +28,14 @@ from efolder_express.utils import DeferredValue
 class DownloadEFolder(object):
     app = klein.Klein()
 
-    def __init__(self, reactor, logger, download_database, certificate_options,
-                 connect_vbms_path, bundle_path, endpoint_url, keyfile,
-                 samlfile, key, keypass, ca_cert, client_cert):
+    def __init__(self, reactor, logger, download_database, fernet,
+                 certificate_options, connect_vbms_path, bundle_path,
+                 endpoint_url, keyfile, samlfile, key, keypass, ca_cert,
+                 client_cert):
         self.reactor = reactor
         self.logger = logger
         self.download_database = download_database
+        self.fernet = fernet
         self.certificate_options = certificate_options
 
         self._connect_vbms_path = connect_vbms_path
@@ -70,10 +74,16 @@ class DownloadEFolder(object):
             )
         )
 
+        f = fernet.MultiFernet([
+            fernet.Fernet(key)
+            for key in config["encryption_keys"]
+        ])
+
         return cls(
             reactor,
             logger,
             DownloadDatabase(reactor, config["db"]["uri"]),
+            f,
             certificate_options,
             connect_vbms_path=config["connect_vbms"]["path"],
             bundle_path=config["connect_vbms"]["bundle_path"],
@@ -203,7 +213,7 @@ STDOUT.flush()
         else:
             logger.emit("get_document.success")
             with tempfile.NamedTemporaryFile(delete=False) as f:
-                f.write(contents)
+                f.write(self.fernet.encrypt(contents))
             yield self.download_database.set_document_content_location(
                 document, f.name
             )
@@ -258,7 +268,7 @@ STDOUT.flush()
         assert download.completed
 
         document_types = yield self.document_types.wait()
-        path = download.build_zip(self.jinja_env, document_types)
+        path = download.build_zip(self.jinja_env, self.fernet, document_types)
 
         request.setHeader(
             "Content-Disposition",
