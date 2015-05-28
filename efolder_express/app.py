@@ -267,6 +267,11 @@ STDOUT.flush()
         )
         assert download.completed
 
+        self.logger.bind(
+            request_id=request_id,
+            file_number=download.file_number,
+        ).emit("download")
+
         document_types = yield self.document_types.wait()
         path = download.build_zip(self.jinja_env, self.fernet, document_types)
 
