@@ -1,3 +1,4 @@
+import functools
 import json
 import os
 import stat
@@ -23,6 +24,15 @@ import yaml
 
 from efolder_express.db import DownloadDatabase, Document
 from efolder_express.utils import DeferredValue
+
+
+def instrumented_route(func):
+    @functools.wraps(func)
+    def route(self, request, *args, **kwargs):
+        timer = self.logger.time("request.{}".format(func.__name__))
+        request.notifyFinish().addBoth(lambda *args, **kwargs: timer.stop())
+        return func(self, request, *args, **kwargs)
+    return route
 
 
 class DownloadEFolder(object):
@@ -232,10 +242,12 @@ STDOUT.flush()
         })
 
     @app.route("/")
+    @instrumented_route
     def index(self, request):
         return self.render_template("index.html")
 
     @app.route("/download/", methods=["POST"])
+    @instrumented_route
     @inlineCallbacks
     def download(self, request):
         file_number = request.args["file_number"][0]
@@ -250,6 +262,7 @@ STDOUT.flush()
         returnValue(None)
 
     @app.route("/download/<request_id>/")
+    @instrumented_route
     @inlineCallbacks
     def download_status(self, request, request_id):
         download = yield self.download_database.get_download(
@@ -260,6 +273,7 @@ STDOUT.flush()
         }))
 
     @app.route("/download/<request_id>/zip/")
+    @instrumented_route
     @inlineCallbacks
     def download_zip(self, request, request_id):
         download = yield self.download_database.get_download(
