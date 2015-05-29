@@ -1,7 +1,6 @@
 import pytest
 
 from sqlalchemy.schema import CreateTable
-from sqlalchemy.sql import select, func
 
 from efolder_express.db import DownloadDatabase, DownloadNotFound
 
