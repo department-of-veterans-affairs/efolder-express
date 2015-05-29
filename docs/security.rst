@@ -19,6 +19,10 @@ from the eFolder on disk. These files are encrypted using FIPS 140-2
 cryptography: AES-128 in CBC mode with HMAC-SHA256 for authentication in an
 encrypt-then-MAC composition.
 
+All requests to the application are forced to use HTTPS, with modern TLS
+configuration. HTTP Strict Transport Security is used to ensure HTTP requests
+are never issued.
+
 Auditing
 --------
 
