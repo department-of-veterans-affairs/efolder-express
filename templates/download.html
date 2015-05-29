@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-    {% if not status.completed and not status.errored %}
+    {% if not status.completed and status.state != "ERRORED" %}
         <meta http-equiv="refresh" content="2" />
     {% endif %}
 {% endblock %}
