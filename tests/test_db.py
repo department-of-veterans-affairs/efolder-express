@@ -3,7 +3,7 @@ import pytest
 from sqlalchemy.schema import CreateTable
 from sqlalchemy.sql import select, func
 
-from efolder_express.db import DownloadDatabase
+from efolder_express.db import DownloadDatabase, DownloadNotFound
 
 from .utils import FakeReactor, FakeThreadPool, success_result_of
 
@@ -40,3 +40,18 @@ class TestDownloadDatabase(object):
         assert download.file_number == "123456789"
         assert download.state == "STARTED"
         assert download.documents == []
+
+    def test_get_download_non_existent(self, db):
+        d = db.get_download("non-existent")
+        with pytest.raises(DownloadNotFound):
+            success_result_of(d)
+
+    def test_mark_download_errored(self, db):
+        d = db.create_download("test-request-id", "123456789")
+        success_result_of(d)
+
+        d = db.mark_download_errored("test-request-id")
+        success_result_of(d)
+
+        download = success_result_of(db.get_download("test-request-id"))
+        assert download.state == "ERRORED"
