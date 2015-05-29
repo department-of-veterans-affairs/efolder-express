@@ -18,6 +18,7 @@ from twisted.internet.defer import (
 from twisted.internet.utils import getProcessOutput
 from twisted.python import log
 from twisted.python.filepath import FilePath
+from twisted.python.threadpool import ThreadPool
 from twisted.web.static import File
 
 import yaml
@@ -89,10 +90,15 @@ class DownloadEFolder(object):
             for key in config["encryption_keys"]
         ])
 
+        # TODO: bump this once alchimia properly handles pinning
+        thread_pool = ThreadPool(minthreads=1, maxthreads=1)
+        thread_pool.start()
+        reactor.addSystemEventTrigger('during', 'shutdown', thread_pool.stop)
+
         return cls(
             reactor,
             logger,
-            DownloadDatabase(reactor, config["db"]["uri"]),
+            DownloadDatabase(reactor, thread_pool, config["db"]["uri"]),
             f,
             certificate_options,
             connect_vbms_path=config["connect_vbms"]["path"],

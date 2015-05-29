@@ -8,7 +8,6 @@ import alchimia
 import sqlalchemy
 
 from twisted.internet.defer import inlineCallbacks, returnValue
-from twisted.python.threadpool import ThreadPool
 
 
 class DownloadNotFound(Exception):
@@ -96,7 +95,14 @@ class Document(object):
 
 
 class DownloadDatabase(object):
-    def __init__(self, reactor, database_uri):
+    def __init__(self, reactor, thread_pool, database_uri):
+        self._engine = sqlalchemy.create_engine(
+            database_uri,
+            strategy=alchimia.TWISTED_STRATEGY,
+            reactor=reactor,
+            thread_pool=thread_pool,
+        )
+
         self._metadata = sqlalchemy.MetaData()
 
         self._downloads = sqlalchemy.Table(
@@ -179,19 +185,6 @@ class DownloadDatabase(object):
                 sqlalchemy.Boolean(),
                 nullable=False,
             ),
-        )
-
-        self._metadata.create_all(sqlalchemy.create_engine(database_uri))
-
-        # TODO: bump this once alchimia properly handles pinning
-        thread_pool = ThreadPool(minthreads=1, maxthreads=1)
-        thread_pool.start()
-        reactor.addSystemEventTrigger('during', 'shutdown', thread_pool.stop)
-        self._engine = sqlalchemy.create_engine(
-            database_uri,
-            strategy=alchimia.TWISTED_STRATEGY,
-            reactor=reactor,
-            thread_pool=thread_pool,
         )
 
     def _document_from_row(self, row):
