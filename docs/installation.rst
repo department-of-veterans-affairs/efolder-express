@@ -20,3 +20,20 @@ Finally, run the server:
     $ pip install twistd -no efolder-express --config=path/to/config.yml
 
 And open up your browser to ``http://locahost:8080``.
+
+Testing
+-------
+
+To run the tests, first install the additional test dependencies:
+
+.. code-block:: console
+
+    $ pip install -r test-requirements.txt
+
+Then run:
+
+.. code-block:: console
+
+    $ py.test
+
+and you'll see passing tests.
