@@ -64,7 +64,7 @@ class TestDownloadDatabase(object):
         d = db.create_download("test-request-id", "123456789")
         success_result_of(d)
 
-        db.create_documents([
+        d = db.create_documents([
             Document(
                 id="test-document-id",
                 download_id="test-request-id",
@@ -77,6 +77,7 @@ class TestDownloadDatabase(object):
                 errored=False,
             )
         ])
+        success_result_of(d)
 
         download = success_result_of(db.get_download("test-request-id"))
         assert len(download.documents) == 1
