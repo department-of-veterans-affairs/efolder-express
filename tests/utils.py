@@ -10,6 +10,16 @@ def success_result_of(d):
     return result[0]
 
 
+def no_result(d):
+    result = []
+
+    def cb(res):
+        result.append(res)
+        return res
+    d.addBoth(cb)
+    assert not result
+
+
 class FakeReactor(object):
     def callFromThread(self, f, *args, **kwargs):
         return f(*args, **kwargs)

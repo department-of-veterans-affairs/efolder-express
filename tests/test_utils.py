@@ -2,7 +2,9 @@ import pytest
 
 from twisted.internet.defer import fail, succeed
 
-from .utils import success_result_of
+from efolder_express.utils import DeferredValue
+
+from .utils import success_result_of, no_result
 
 
 class TestSuccessResultOf(object):
@@ -12,3 +14,16 @@ class TestSuccessResultOf(object):
 
     def test_sucecss(self):
         assert success_result_of(succeed(12)) == 12
+
+
+class TestDeferredValue(object):
+    def test_simple(self):
+        v = DeferredValue()
+
+        d = v.wait()
+        no_result(d)
+
+        v.completed(12)
+        assert success_result_of(d) == 12
+
+        assert success_result_of(v.wait()) == 12
