@@ -86,3 +86,57 @@ class TestDownloadDatabase(object):
 
         [doc] = download.documents
         assert doc.id == "test-document-id"
+
+    def test_mark_document_errored(self, db):
+        d = db.create_download("test-request-id", "123456789")
+        success_result_of(d)
+
+        doc = Document(
+            id="test-document-id",
+            download_id="test-request-id",
+            document_id="{ABCD}",
+            doc_type="00356",
+            filename="file.pdf",
+            received_at=datetime.datetime.utcnow(),
+            source="CUI",
+            content_location=None,
+            errored=False,
+        )
+
+        d = db.create_documents([doc])
+        success_result_of(d)
+
+        d = db.mark_document_errored(doc)
+        success_result_of(d)
+
+        download = success_result_of(db.get_download("test-request-id"))
+        assert download.completed
+        assert download.percent_completed == 100
+        assert download.documents[0].errored
+
+    def test_set_document_content_location(self, db):
+        d = db.create_download("test-request-id", "123456789")
+        success_result_of(d)
+
+        doc = Document(
+            id="test-document-id",
+            download_id="test-request-id",
+            document_id="{ABCD}",
+            doc_type="00356",
+            filename="file.pdf",
+            received_at=datetime.datetime.utcnow(),
+            source="CUI",
+            content_location=None,
+            errored=False,
+        )
+
+        d = db.create_documents([doc])
+        success_result_of(d)
+
+        d = db.set_document_content_location(doc, "/path/to/content")
+        success_result_of(d)
+
+        download = success_result_of(db.get_download("test-request-id"))
+        assert download.completed
+        assert download.percent_completed == 100
+        assert download.documents[0].content_location == "/path/to/content"
