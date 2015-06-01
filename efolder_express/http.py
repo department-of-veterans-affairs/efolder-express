@@ -4,8 +4,8 @@ from twisted.web import resource, server
 class ForceHTTPSResource(resource.Resource):
     isLeaf = True
 
-    def __init__(self, target_netloc):
-        self._target_netloc = target_netloc
+    def __init__(self, target_port):
+        self._target_port = target_port
         resource.Resource.__init__(self)
 
     def getChild(self, name, request):
@@ -14,7 +14,10 @@ class ForceHTTPSResource(resource.Resource):
     def render(self, request):
         path = request.URLPath()
         path.scheme = "https"
-        path.netloc = self._target_netloc
+        if self._target_port != 443:
+            path.netloc = "{}:{}".format(
+                path.netloc.split(":")[0], self._target_port
+            )
 
         request.redirect(str(path))
         request.finish()
