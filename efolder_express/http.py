@@ -14,8 +14,10 @@ class ForceHTTPSResource(resource.Resource):
     def render(self, request):
         path = request.URLPath()
         path.scheme = "https"
-        if target_port != 443:
-            path.netloc = path.netloc.split(":")[0] + str(target_port)
+        if self._target_port != 443:
+            path.netloc = "{}:{}".format(
+                path.netloc.split(":")[0], self._target_port
+            )
 
         request.redirect(str(path))
         request.finish()
