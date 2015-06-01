@@ -10,9 +10,7 @@ import jinja2
 import klein
 
 from twisted.internet import ssl
-from twisted.internet.defer import (
-    inlineCallbacks, returnValue
-)
+from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.python import log
 from twisted.python.filepath import FilePath
 from twisted.python.threadpool import ThreadPool
@@ -44,7 +42,7 @@ class DownloadEFolder(object):
         self.download_database = download_database
         self.fernet = fernet
         self.certificate_options = certificate_options
-        self.vbms_client
+        self.vbms_client = vbms_client
 
         self.jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(
@@ -111,7 +109,7 @@ class DownloadEFolder(object):
 
         logger.emit("list_documents.start")
         try:
-            documents = yield self._vbms_client.list_documents(
+            documents = yield self.vbms_client.list_documents(
                 logger, file_number
             )
         except IOError:
@@ -135,7 +133,7 @@ class DownloadEFolder(object):
         logger.emit("get_document.start")
 
         try:
-            contents = yield self._vbms_client.fetch_document_contents(
+            contents = yield self.vbms_client.fetch_document_contents(
                 logger, str(document.document_id)
             )
         except IOError:

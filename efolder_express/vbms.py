@@ -91,6 +91,7 @@ STDOUT.flush()
 
         return self._connect_vbms_semaphore.run(run)
 
+    @inlineCallbacks
     def list_documents(self, logger, file_number):
         response = yield self._execute_connect_vbms(
             logger.bind(process="ListDocuments"),
