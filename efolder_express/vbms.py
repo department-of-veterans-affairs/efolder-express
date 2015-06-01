@@ -92,6 +92,16 @@ STDOUT.flush()
         return self._connect_vbms_semaphore.run(run)
 
     @inlineCallbacks
+    def get_document_types(self, logger):
+        response = yield self._execute_connect_vbms(
+            logger.bind(process="GetDocumentTypes"),
+            "VBMS::Requests::GetDocumentTypes.new()",
+            "result.map(&:to_h).to_json",
+            [],
+        )
+        returnValue(json.loads(response))
+
+    @inlineCallbacks
     def list_documents(self, logger, file_number):
         response = yield self._execute_connect_vbms(
             logger.bind(process="ListDocuments"),

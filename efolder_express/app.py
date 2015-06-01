@@ -1,5 +1,4 @@
 import functools
-import json
 import tempfile
 import uuid
 
@@ -35,9 +34,8 @@ def instrumented_route(func):
 class DownloadEFolder(object):
     app = klein.Klein()
 
-    def __init__(self, reactor, logger, download_database, fernet,
-                 certificate_options, vbms_client):
-        self.reactor = reactor
+    def __init__(self, logger, download_database, fernet, certificate_options,
+                 vbms_client):
         self.logger = logger
         self.download_database = download_database
         self.fernet = fernet
@@ -79,12 +77,12 @@ class DownloadEFolder(object):
         reactor.addSystemEventTrigger('during', 'shutdown', thread_pool.stop)
 
         return cls(
-            reactor,
             logger,
             DownloadDatabase(reactor, thread_pool, config["db"]["uri"]),
             f,
             certificate_options,
             VBMSClient(
+                reactor,
                 connect_vbms_path=config["connect_vbms"]["path"],
                 bundle_path=config["connect_vbms"]["bundle_path"],
                 endpoint_url=config["vbms"]["endpoint_url"],
@@ -150,15 +148,10 @@ class DownloadEFolder(object):
 
     @inlineCallbacks
     def start_fetch_document_types(self):
-        contents = json.loads((yield self._execute_connect_vbms(
-            self.logger.bind(process="GetDocumentTypes"),
-            "VBMS::Requests::GetDocumentTypes.new()",
-            "result.map(&:to_h).to_json",
-            [],
-        )))
+        document_types = yield self.vbms_client.get_document_types(self.logger)
         self.document_types.completed({
             int(c["type_id"]): c["description"]
-            for c in contents
+            for c in document_types
         })
 
     @app.route("/")
