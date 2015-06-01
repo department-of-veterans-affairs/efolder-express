@@ -1,7 +1,5 @@
 import functools
 import json
-import os
-import stat
 import tempfile
 import uuid
 
@@ -13,9 +11,8 @@ import klein
 
 from twisted.internet import ssl
 from twisted.internet.defer import (
-    DeferredSemaphore, inlineCallbacks, returnValue
+    inlineCallbacks, returnValue
 )
-from twisted.internet.utils import getProcessOutput
 from twisted.python import log
 from twisted.python.filepath import FilePath
 from twisted.python.threadpool import ThreadPool
@@ -25,6 +22,7 @@ import yaml
 
 from efolder_express.db import DownloadDatabase, Document
 from efolder_express.utils import DeferredValue
+from efolder_express.vbms import VBMSClient
 
 
 def instrumented_route(func):
@@ -40,24 +38,13 @@ class DownloadEFolder(object):
     app = klein.Klein()
 
     def __init__(self, reactor, logger, download_database, fernet,
-                 certificate_options, connect_vbms_path, bundle_path,
-                 endpoint_url, keyfile, samlfile, key, keypass, ca_cert,
-                 client_cert):
+                 certificate_options, vbms_client):
         self.reactor = reactor
         self.logger = logger
         self.download_database = download_database
         self.fernet = fernet
         self.certificate_options = certificate_options
-
-        self._connect_vbms_path = connect_vbms_path
-        self._bundle_path = bundle_path
-        self._endpoint_url = endpoint_url
-        self._keyfile = keyfile
-        self._samlfile = samlfile
-        self._key = key
-        self._keypass = keypass
-        self._ca_cert = ca_cert
-        self._client_cert = client_cert
+        self.vbms_client
 
         self.jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(
@@ -65,8 +52,6 @@ class DownloadEFolder(object):
             ),
             autoescape=True
         )
-        self._connect_vbms_semaphore = DeferredSemaphore(tokens=8)
-
         self.document_types = DeferredValue()
 
     @classmethod
@@ -101,85 +86,22 @@ class DownloadEFolder(object):
             DownloadDatabase(reactor, thread_pool, config["db"]["uri"]),
             f,
             certificate_options,
-            connect_vbms_path=config["connect_vbms"]["path"],
-            bundle_path=config["connect_vbms"]["bundle_path"],
-            endpoint_url=config["vbms"]["endpoint_url"],
-            keyfile=config["vbms"]["keyfile"],
-            samlfile=config["vbms"]["samlfile"],
-            key=config["vbms"].get("key"),
-            keypass=config["vbms"]["keypass"],
-            ca_cert=config["vbms"].get("ca_cert"),
-            client_cert=config["vbms"].get("client_cert"),
+            VBMSClient(
+                connect_vbms_path=config["connect_vbms"]["path"],
+                bundle_path=config["connect_vbms"]["bundle_path"],
+                endpoint_url=config["vbms"]["endpoint_url"],
+                keyfile=config["vbms"]["keyfile"],
+                samlfile=config["vbms"]["samlfile"],
+                key=config["vbms"].get("key"),
+                keypass=config["vbms"]["keypass"],
+                ca_cert=config["vbms"].get("ca_cert"),
+                client_cert=config["vbms"].get("client_cert"),
+            ),
         )
 
     def render_template(self, template_name, data={}):
         t = self.jinja_env.get_template(template_name)
         return t.render(data)
-
-    def _path_to_ruby(self, path):
-        if path is None:
-            return "nil"
-        else:
-            return repr(path)
-
-    def _execute_connect_vbms(self, logger, request, formatter, args):
-        ruby_code = """#!/usr/bin/env ruby
-
-$LOAD_PATH << '{connect_vbms_path}/src/'
-
-require 'json'
-
-require 'vbms'
-
-
-client = VBMS::Client.new(
-    {endpoint_url!r},
-    {keyfile},
-    {samlfile},
-    {key},
-    {keypass!r},
-    {ca_cert},
-    {client_cert},
-)
-request = {request}
-result = client.send(request)
-STDOUT.write({formatter})
-STDOUT.flush()
-        """.format(
-            connect_vbms_path=self._connect_vbms_path,
-            endpoint_url=self._endpoint_url,
-            keyfile=self._path_to_ruby(self._keyfile),
-            samlfile=self._path_to_ruby(self._samlfile),
-            key=self._path_to_ruby(self._key),
-            keypass=self._keypass,
-            ca_cert=self._path_to_ruby(self._ca_cert),
-            client_cert=self._path_to_ruby(self._client_cert),
-
-            request=request,
-            formatter=formatter,
-        ).strip()
-        with tempfile.NamedTemporaryFile(suffix=".rb", delete=False) as f:
-            f.write(ruby_code)
-
-        st = os.stat(f.name)
-        os.chmod(f.name, st.st_mode | stat.S_IEXEC)
-
-        @inlineCallbacks
-        def run():
-            timer = logger.time("process.spawn")
-            try:
-                result = yield getProcessOutput(
-                    self._bundle_path,
-                    ["exec", f.name] + args,
-                    env=os.environ,
-                    path=self._connect_vbms_path,
-                    reactor=self.reactor
-                )
-            finally:
-                timer.stop()
-            returnValue(result)
-
-        return self._connect_vbms_semaphore.run(run)
 
     @inlineCallbacks
     def start_download(self, file_number, request_id):
@@ -189,12 +111,9 @@ STDOUT.flush()
 
         logger.emit("list_documents.start")
         try:
-            documents = json.loads((yield self._execute_connect_vbms(
-                logger.bind(process="ListDocuments"),
-                "VBMS::Requests::ListDocuments.new(ARGV[0])",
-                'result.map(&:to_h).to_json',
-                [file_number],
-            )))
+            documents = yield self._vbms_client.list_documents(
+                logger, file_number
+            )
         except IOError:
             logger.emit("list_documents.error")
             log.err()
@@ -216,11 +135,8 @@ STDOUT.flush()
         logger.emit("get_document.start")
 
         try:
-            contents = yield self._execute_connect_vbms(
-                logger.bind(process="FetchDocumentById"),
-                "VBMS::Requests::FetchDocumentById.new(ARGV[0])",
-                "result.content",
-                [str(document.document_id)],
+            contents = yield self._vbms_client.fetch_document_contents(
+                logger, str(document.document_id)
             )
         except IOError:
             logger.emit("get_document.error")
