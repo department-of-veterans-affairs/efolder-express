@@ -12,7 +12,7 @@ from .utils import FakeReactor, FakeThreadPool, success_result_of
 @pytest.fixture
 def db():
     db = DownloadDatabase(FakeReactor(), FakeThreadPool(), "sqlite://")
-    for table in [db._downloads, db._documents]:
+    for table in db._metadata.sorted_tables:
         success_result_of(db._engine.execute(CreateTable(table)))
     return db
 

@@ -1,3 +1,5 @@
+import json
+
 from twisted.python.failure import Failure
 
 
@@ -33,3 +35,18 @@ class FakeThreadPool(object):
             cb(False, Failure(e))
         else:
             cb(True, result)
+
+
+class FakeMemoryLog(object):
+    def __init__(self):
+        self.msgs = []
+
+    def msg(self, s):
+        self.msgs.append(json.loads(s))
+
+
+class FakeVBMSClient(object):
+    def get_document_types(self, logger):
+        return [
+            {"type_id": "1", "description": "Test!"}
+        ]

@@ -1,14 +1,6 @@
-import json
-
 from efolder_express.log import Logger
 
-
-class FakeMemoryLog(object):
-    def __init__(self):
-        self.msgs = []
-
-    def msg(self, s):
-        self.msgs.append(json.loads(s))
+from .utils import FakeMemoryLog
 
 
 class TestLogger(object):
