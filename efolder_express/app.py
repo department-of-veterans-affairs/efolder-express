@@ -37,12 +37,15 @@ class DownloadEFolder(object):
     app = klein.Klein()
 
     def __init__(self, logger, download_database, fernet, certificate_options,
-                 vbms_client):
+                 vbms_client, http_port, https_port):
         self.logger = logger
         self.download_database = download_database
         self.fernet = fernet
         self.certificate_options = certificate_options
         self.vbms_client = vbms_client
+
+        self.http_port = http_port
+        self.https_port = https_port
 
         self.jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(
@@ -68,11 +71,6 @@ class DownloadEFolder(object):
             )
         )
 
-        f = fernet.MultiFernet([
-            fernet.Fernet(key)
-            for key in config["encryption_keys"]
-        ])
-
         # TODO: bump this once alchimia properly handles pinning
         thread_pool = ThreadPool(minthreads=1, maxthreads=1)
         thread_pool.start()
@@ -81,7 +79,9 @@ class DownloadEFolder(object):
         return cls(
             logger,
             DownloadDatabase(reactor, thread_pool, config["db"]["uri"]),
-            f,
+            fernet.MultiFernet([
+                fernet.Fernet(key) for key in config["encryption_keys"]
+            ]),
             certificate_options,
             VBMSClient(
                 reactor,
@@ -95,6 +95,8 @@ class DownloadEFolder(object):
                 ca_cert=config["vbms"].get("ca_cert"),
                 client_cert=config["vbms"].get("client_cert"),
             ),
+            config["http"]["http_port"],
+            config["http"]["https_port"],
         )
 
     def render_template(self, template_name, data={}):

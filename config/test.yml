@@ -19,3 +19,8 @@ db:
 
 encryption_keys:
     - "HA6EtTVMI0qTDnSSKtWdZxmJFA8lFb0NrJiZYiNsTYs="
+
+http:
+    http_port: 8080
+    https_host: "localhost"
+    https_port: 8081

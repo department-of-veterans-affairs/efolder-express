@@ -25,15 +25,14 @@ def makeService(options):
     app.start_fetch_document_types()
 
     service = MultiService()
-    # TODO: these should be 80 and 443 in production
     TCPServer(
-        8080,
-        Site(ForceHTTPSResource("localhost:8081"), logPath="/dev/null"),
+        app.http_port,
+        Site(ForceHTTPSResource(app.https_port), logPath="/dev/null"),
         reactor=reactor
     ).setServiceParent(service)
 
     SSLServer(
-        8081,
+        app.https_port,
         Site(HSTSResource(app.app.resource()), logPath="/dev/null"),
         app.certificate_options,
         reactor=reactor,

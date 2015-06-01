@@ -13,6 +13,8 @@ def app():
         None,
         None,
         FakeVBMSClient(),
+        None,
+        None,
     )
 
 
