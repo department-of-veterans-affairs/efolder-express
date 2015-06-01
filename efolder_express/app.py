@@ -25,7 +25,9 @@ from efolder_express.vbms import VBMSClient
 def instrumented_route(func):
     @functools.wraps(func)
     def route(self, request, *args, **kwargs):
-        timer = self.logger.time("request.{}".format(func.__name__))
+        timer = self.logger.bind(
+            peer=request.getClientIP(),
+        ).time("request.{}".format(func.__name__))
         request.notifyFinish().addBoth(lambda *args, **kwargs: timer.stop())
         return func(self, request, *args, **kwargs)
     return route
