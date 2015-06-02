@@ -5,3 +5,4 @@ dev.db
 docs/_build/
 .coverage
 htmlcov/
+__pycache__/
