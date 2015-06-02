@@ -1,4 +1,5 @@
 import functools
+import os
 import tempfile
 import uuid
 
@@ -213,4 +214,7 @@ class DownloadEFolder(object):
 
         resource = File(path, defaultType="application/zip")
         resource.isLeaf = True
+
+        request.notifyFinish().addBoth(lambda *args, **kwargs: os.remove(path))
+
         returnValue(resource)

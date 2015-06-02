@@ -11,8 +11,8 @@ connect_vbms:
     bundle_path: /Users/alex_gaynor/.gem/ruby/2.2.0/bin/bundle
 
 tls:
-    certificate: /Users/alex_gaynor/projects/va/download-efolder/dev/cert.pem
-    dh_parameters: /Users/alex_gaynor/projects/va/download-efolder/dev/dhparams.pem
+    certificate: /Users/alex_gaynor/projects/va/efolder-express/dev/cert.pem
+    dh_parameters: /Users/alex_gaynor/projects/va/efolder-express/dev/dhparams.pem
 
 db:
     uri: sqlite:///dev.db
