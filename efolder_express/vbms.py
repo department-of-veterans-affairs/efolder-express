@@ -6,7 +6,15 @@ import tempfile
 from twisted.internet.defer import (
     DeferredSemaphore, inlineCallbacks, returnValue
 )
-from twisted.internet.utils import getProcessOutput
+from twisted.internet.utils import getProcessOutputAndValue
+
+
+class VBMSError(Exception):
+    def __init__(self, stdout, stderr, exit_code):
+        super(VBMSError, self).__init__(stderr)
+        self.stdout = stdout
+        self.stderr = stderr
+        self.exit_code = exit_code
 
 
 class VBMSClient(object):
@@ -78,7 +86,7 @@ STDOUT.flush()
         def run():
             timer = logger.time("process.spawn")
             try:
-                result = yield getProcessOutput(
+                stdout, stderr, exit_code = yield getProcessOutputAndValue(
                     self._bundle_path,
                     ["exec", f.name] + args,
                     env=os.environ,
@@ -87,7 +95,9 @@ STDOUT.flush()
                 )
             finally:
                 timer.stop()
-            returnValue(result)
+            if exit_code != 0:
+                raise VBMSError(stdout, stderr, exit_code)
+            returnValue(stdout)
 
         return self._connect_vbms_semaphore.run(run)
 
