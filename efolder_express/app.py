@@ -20,7 +20,7 @@ import yaml
 
 from efolder_express.db import DownloadDatabase, Document
 from efolder_express.utils import DeferredValue
-from efolder_express.vbms import VBMSClient
+from efolder_express.vbms import VBMSClient, VBMSError
 
 
 def instrumented_route(func):
@@ -115,9 +115,12 @@ class DownloadEFolder(object):
             documents = yield self.vbms_client.list_documents(
                 logger, file_number
             )
-        except IOError:
-            logger.emit("list_documents.error")
-            log.err()
+        except VBMSError as e:
+            logger.bind(
+                stdout=e.stdout,
+                stderr=e.stderr,
+                exit_code=e.exit_code,
+            ).emit("list_documents.error")
             yield self.download_database.mark_download_errored(request_id)
         else:
             logger.emit("list_documents.success")
@@ -139,9 +142,12 @@ class DownloadEFolder(object):
             contents = yield self.vbms_client.fetch_document_contents(
                 logger, str(document.document_id)
             )
-        except IOError:
-            logger.emit("get_document.error")
-            log.err()
+        except VBMSError as e:
+            logger.bind(
+                stdout=e.stdout,
+                stderr=e.stderr,
+                exit_code=e.exit_code,
+            ).emit("get_document.error")
             yield self.download_database.mark_document_errored(document)
         else:
             logger.emit("get_document.success")
@@ -174,7 +180,7 @@ class DownloadEFolder(object):
         request_id = str(uuid.uuid4())
 
         yield self.download_database.create_download(request_id, file_number)
-        self.start_download(file_number, request_id).addErrback(log.err)
+        self.start_download(file_number, request_id)
 
         request.redirect("/download/{}/".format(request_id))
         returnValue(None)
