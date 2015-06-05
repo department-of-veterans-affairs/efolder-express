@@ -8,7 +8,7 @@
 
 {% block body %}
     <div class="jumbotron">
-        <h2>Download status for <code>{{ status.file_number }}</code></h2>
+        <h1>Download status for <code>{{ status.file_number }}</code></h1>
 
         {% if status.completed %}
             <br />
@@ -50,8 +50,8 @@
             <ul class="list-group">
                 {% for doc in status.documents %}
                     <li class="list-group-item list-group-item-{% if doc.content_location %}success{% elif doc.errored %}danger{% else %}warning{% endif %}">
-                        <span class="glyphicon glyphicon-{% if doc.content_location %}ok-sign{% elif doc.errored %}remove-sign{% else %}option-horizontal{% endif %}"></span>
-                        &nbsp;&nbsp;&nbsp;{{ doc.filename }}
+                        <span style="padding-right: 8px;" class="glyphicon glyphicon-{% if doc.content_location %}ok-sign{% elif doc.errored %}remove-sign{% else %}option-horizontal{% endif %}"></span>
+                        {{ doc.filename }}
                     </li>
                 {% endfor %}
             </ul>
