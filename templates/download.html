@@ -4,6 +4,11 @@
     {% if not status.completed and status.state != "ERRORED" %}
         <meta http-equiv="refresh" content="2" />
     {% endif %}
+    <style type="text/css">
+        .download-file-icon {
+            padding-right: 8px;
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
@@ -50,7 +55,7 @@
             <ul class="list-group">
                 {% for doc in status.documents %}
                     <li class="list-group-item list-group-item-{% if doc.content_location %}success{% elif doc.errored %}danger{% else %}warning{% endif %}">
-                        <span style="padding-right: 8px;" class="glyphicon glyphicon-{% if doc.content_location %}ok-sign{% elif doc.errored %}remove-sign{% else %}option-horizontal{% endif %}"></span>
+                        <span class="download-file-icon glyphicon glyphicon-{% if doc.content_location %}ok-sign{% elif doc.errored %}remove-sign{% else %}option-horizontal{% endif %}"></span>
                         {{ doc.filename }}
                     </li>
                 {% endfor %}
