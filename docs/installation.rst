@@ -17,7 +17,7 @@ Finally, run the server:
 
 .. code-block:: console
 
-    $ pip install twistd -no efolder-express --config=path/to/config.yml
+    $ twistd -no efolder-express --config=path/to/config.yml
 
 And open up your browser to ``http://locahost:8080``.
 
