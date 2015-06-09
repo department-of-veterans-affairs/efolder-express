@@ -218,8 +218,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'eFolderExpress.tex', u'eFolder Express Documentation',
-   u'Digital Service', 'manual'),
+    (master_doc, 'eFolderExpress.tex', u'eFolder Express Documentation',
+     u'Digital Service at the VA', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
