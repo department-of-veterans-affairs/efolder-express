@@ -13,4 +13,5 @@ Contents
     :maxdepth: 2
 
     installation
+    architecture
     security
