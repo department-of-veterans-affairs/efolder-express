@@ -11,7 +11,6 @@ import klein
 
 from twisted.internet import ssl
 from twisted.internet.defer import inlineCallbacks, returnValue
-from twisted.python import log
 from twisted.python.filepath import FilePath
 from twisted.python.threadpool import ThreadPool
 from twisted.web.static import File
