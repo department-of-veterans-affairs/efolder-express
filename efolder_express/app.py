@@ -152,7 +152,7 @@ class DownloadEFolder(object):
         else:
             logger.emit("get_document.success")
             target = self.storage_path.child(str(uuid.uuid4()))
-            target.setContents(self.fernet.encrypt(contents))
+            target.setContent(self.fernet.encrypt(contents))
             yield self.download_database.set_document_content_location(
                 document, target.path
             )
