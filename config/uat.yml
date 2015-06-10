@@ -20,6 +20,9 @@ tls:
 db:
     uri: sqlite:///dev-uat.db
 
+storage:
+    filesystem: /Users/alex_gaynor/projects/va/efolder-express/media/
+
 encryption_keys:
     - "HA6EtTVMI0qTDnSSKtWdZxmJFA8lFb0NrJiZYiNsTYs="
 

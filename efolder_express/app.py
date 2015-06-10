@@ -1,6 +1,5 @@
 import functools
 import os
-import tempfile
 import uuid
 
 from cryptography import fernet
@@ -36,10 +35,11 @@ def instrumented_route(func):
 class DownloadEFolder(object):
     app = klein.Klein()
 
-    def __init__(self, logger, download_database, fernet, certificate_options,
-                 vbms_client, http_port, https_port):
+    def __init__(self, logger, download_database, storage_path, fernet,
+                 certificate_options, vbms_client, http_port, https_port):
         self.logger = logger
         self.download_database = download_database
+        self.storage_path = storage_path
         self.fernet = fernet
         self.certificate_options = certificate_options
         self.vbms_client = vbms_client
@@ -79,6 +79,7 @@ class DownloadEFolder(object):
         return cls(
             logger,
             DownloadDatabase(reactor, thread_pool, config["db"]["uri"]),
+            FilePath(config["storage"]["filesystem"]),
             fernet.MultiFernet([
                 fernet.Fernet(key) for key in config["encryption_keys"]
             ]),
@@ -150,10 +151,10 @@ class DownloadEFolder(object):
             yield self.download_database.mark_document_errored(document)
         else:
             logger.emit("get_document.success")
-            with tempfile.NamedTemporaryFile(delete=False) as f:
-                f.write(self.fernet.encrypt(contents))
+            target = self.storage_path.child(str(uuid.uuid4()))
+            target.setContent(self.fernet.encrypt(contents))
             yield self.download_database.set_document_content_location(
-                document, f.name
+                document, target.path
             )
 
     @inlineCallbacks
