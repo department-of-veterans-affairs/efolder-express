@@ -18,7 +18,7 @@ db:
     uri: sqlite:///dev.db
 
 storage:
-    filesystem: /Users/alex_gaynor/va/efolder-express/media/
+    filesystem: /Users/alex_gaynor/projects/va/efolder-express/media/
 
 encryption_keys:
     - "HA6EtTVMI0qTDnSSKtWdZxmJFA8lFb0NrJiZYiNsTYs="
