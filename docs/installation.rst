@@ -47,4 +47,4 @@ Then run:
 and you'll see passing tests.
 
 .. _`virtualenv`: https://packaging.python.org/en/latest/installing.html#requirements-for-installing-packages
-.. _`connect_vbms`: https://github.com/adhocteam/connect_vbms
+.. _`connect_vbms`: https://github.com/department-of-veterans-affairs/connect_vbms
