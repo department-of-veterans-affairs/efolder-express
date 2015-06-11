@@ -15,6 +15,12 @@ Now create a configuration file, in the same vein as ``config/test.yml``, in
 development you can use the X.509 TLS certificate, private key, and DH
 parameters found in ``dev/``.
 
+Next, create the database:
+
+.. code-block:: console
+
+    $ twistd -no efolder-express --config=path/to/config.yml create-database
+
 Finally, run the server:
 
 .. code-block:: console

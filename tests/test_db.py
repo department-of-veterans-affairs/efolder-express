@@ -2,8 +2,6 @@ import datetime
 
 import pytest
 
-from sqlalchemy.schema import CreateTable
-
 from efolder_express.db import DownloadDatabase, DownloadNotFound, Document
 
 from .utils import FakeReactor, FakeThreadPool, success_result_of
@@ -12,8 +10,7 @@ from .utils import FakeReactor, FakeThreadPool, success_result_of
 @pytest.fixture
 def db():
     db = DownloadDatabase(FakeReactor(), FakeThreadPool(), "sqlite://")
-    for table in db._metadata.sorted_tables:
-        success_result_of(db._engine.execute(CreateTable(table)))
+    success_result_of(db.create_database())
     return db
 
 
