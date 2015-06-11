@@ -19,7 +19,7 @@ Next, create the database:
 
 .. code-block:: console
 
-    $ twisted -no efolder-express --config=path/to/config.yml create-database
+    $ twistd -no efolder-express --config=path/to/config.yml create-database
 
 Finally, run the server:
 
