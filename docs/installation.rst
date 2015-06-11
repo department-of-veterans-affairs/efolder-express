@@ -42,7 +42,7 @@ Then run:
 
 .. code-block:: console
 
-    $ py.test
+    $ py.test tests/
 
 and you'll see passing tests.
 
