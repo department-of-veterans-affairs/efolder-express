@@ -6,6 +6,7 @@ import zipfile
 import alchimia
 
 import sqlalchemy
+from sqlalchemy.schema import CreateTable
 
 from twisted.internet.defer import inlineCallbacks, returnValue
 
@@ -186,6 +187,11 @@ class DownloadDatabase(object):
                 nullable=False,
             ),
         )
+
+    @inlineCallbacks
+    def create_database(self):
+        for table in self._metadata.sorted_tables:
+            yield self._engine.execute(CreateTable(table))
 
     def _document_from_row(self, row):
         return Document(

@@ -1,5 +1,3 @@
-from sqlalchemy.schema import CreateTable
-
 from twisted.application.internet import SSLServer, TCPServer
 from twisted.application.service import MultiService, Service
 from twisted.internet.defer import inlineCallbacks
@@ -41,11 +39,10 @@ class CreateDatabaseService(Service):
 
     @inlineCallbacks
     def start_create_tables(self):
-        for table in self.app.download_database._metadata.sorted_tables:
-            yield self.app.download_database._engine.execute(
-                CreateTable(table)
-            )
-        self.reactor.stop()
+        try:
+            yield self.app.download_database.create_database()
+        finally:
+            self.reactor.stop()
 
 
 def makeService(options):
