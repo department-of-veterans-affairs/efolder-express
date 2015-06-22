@@ -1,11 +1,11 @@
-from twisted.application.internet import SSLServer, TCPServer
+from twisted.application.internet import TCPServer
 from twisted.application.service import MultiService, Service
 from twisted.internet.defer import inlineCallbacks
 from twisted.python import usage, log
 from twisted.web.server import Site
 
 from efolder_express.app import DownloadEFolder
-from efolder_express.http import ForceHTTPSResource, HSTSResource
+from efolder_express.http import HSTSResource
 from efolder_express.log import Logger
 
 
@@ -61,16 +61,8 @@ def makeService(options):
 
     service = MultiService()
     TCPServer(
-        app.http_port,
-        Site(ForceHTTPSResource(app.https_port), logPath="/dev/null"),
+        8080,
+        Site(HSTSResource(app.app.resource()), logPath="/dev/null"),
         reactor=reactor
     ).setServiceParent(service)
-
-    SSLServer(
-        app.https_port,
-        Site(HSTSResource(app.app.resource()), logPath="/dev/null"),
-        app.certificate_options,
-        reactor=reactor,
-    ).setServiceParent(service)
-
     return service
