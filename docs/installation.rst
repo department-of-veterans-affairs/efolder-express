@@ -11,9 +11,7 @@ dependencies:
 
 Next, you'll need to download and build `connect_vbms`_.
 
-Now create a configuration file, in the same vein as ``config/test.yml``, in
-development you can use the X.509 TLS certificate, private key, and DH
-parameters found in ``dev/``.
+Now create a configuration file, in the same vein as ``config/test.yml``.
 
 Next, create the database:
 
