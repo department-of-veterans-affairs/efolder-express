@@ -8,7 +8,6 @@ import jinja2
 
 import klein
 
-from twisted.internet import ssl
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.python.filepath import FilePath
 from twisted.python.threadpool import ThreadPool
@@ -36,16 +35,12 @@ class DownloadEFolder(object):
     app = klein.Klein()
 
     def __init__(self, logger, download_database, storage_path, fernet,
-                 certificate_options, vbms_client, http_port, https_port):
+                 vbms_client):
         self.logger = logger
         self.download_database = download_database
         self.storage_path = storage_path
         self.fernet = fernet
-        self.certificate_options = certificate_options
         self.vbms_client = vbms_client
-
-        self.http_port = http_port
-        self.https_port = https_port
 
         self.jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(
@@ -60,17 +55,6 @@ class DownloadEFolder(object):
         with open(config_path) as f:
             config = yaml.safe_load(f)
 
-        with open(config["tls"]["certificate"]) as f:
-            certificate = ssl.PrivateCertificate.loadPEM(f.read())
-
-        certificate_options = ssl.CertificateOptions(
-            privateKey=certificate.privateKey.original,
-            certificate=certificate.original,
-            dhParameters=ssl.DiffieHellmanParameters.fromFile(
-                FilePath(config["tls"]["dh_parameters"]),
-            )
-        )
-
         # TODO: bump this once alchimia properly handles pinning
         thread_pool = ThreadPool(minthreads=1, maxthreads=1)
         thread_pool.start()
@@ -83,7 +67,6 @@ class DownloadEFolder(object):
             fernet.MultiFernet([
                 fernet.Fernet(key) for key in config["encryption_keys"]
             ]),
-            certificate_options,
             VBMSClient(
                 reactor,
                 connect_vbms_path=config["connect_vbms"]["path"],
@@ -96,8 +79,6 @@ class DownloadEFolder(object):
                 ca_cert=config["vbms"].get("ca_cert"),
                 client_cert=config["vbms"].get("client_cert"),
             ),
-            config["http"]["http_port"],
-            config["http"]["https_port"],
         )
 
     def render_template(self, template_name, data={}):

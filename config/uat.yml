@@ -13,10 +13,6 @@ connect_vbms:
     path: /Users/alex_gaynor/projects/va/connect_vbms/
     bundle_path: /Users/alex_gaynor/.gem/ruby/2.0.0/bin/bundle
 
-tls:
-    certificate: /Users/alex_gaynor/projects/va/efolder-express/dev/cert.pem
-    dh_parameters: /Users/alex_gaynor/projects/va/efolder-express/dev/dhparams.pem
-
 db:
     uri: sqlite:///dev-uat.db
 
@@ -25,7 +21,3 @@ storage:
 
 encryption_keys:
     - "HA6EtTVMI0qTDnSSKtWdZxmJFA8lFb0NrJiZYiNsTYs="
-
-http:
-    http_port: 8080
-    https_port: 8081

@@ -12,10 +12,7 @@ def app():
         None,
         None,
         None,
-        None,
         FakeVBMSClient(),
-        None,
-        None,
     )
 
 

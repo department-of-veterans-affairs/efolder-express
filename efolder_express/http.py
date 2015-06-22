@@ -1,27 +1,4 @@
-from twisted.web import resource, server
-
-
-class ForceHTTPSResource(resource.Resource):
-    isLeaf = True
-
-    def __init__(self, target_port):
-        self._target_port = target_port
-        resource.Resource.__init__(self)
-
-    def getChild(self, name, request):
-        return self
-
-    def render(self, request):
-        path = request.URLPath()
-        path.scheme = "https"
-        if self._target_port != 443:
-            path.netloc = "{}:{}".format(
-                path.netloc.split(":")[0], self._target_port
-            )
-
-        request.redirect(str(path))
-        request.finish()
-        return server.NOT_DONE_YET
+from twisted.web import resource
 
 
 class HSTSResource(resource.Resource):
