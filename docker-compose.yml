@@ -1,9 +1,0 @@
-web:
-    build: .
-    command: twistd -no efolder-express --config=config/test.yml
-    ports:
-        - "8080:8080"
-    volumes:
-        - .:/app/
-    environment:
-        PYTHONUNBUFFERED: 1
