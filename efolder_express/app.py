@@ -8,7 +8,7 @@ import jinja2
 
 import klein
 
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks, returnValue, succeed
 from twisted.python.filepath import FilePath
 from twisted.python.threadpool import ThreadPool
 from twisted.web.static import File
@@ -148,10 +148,16 @@ class DownloadEFolder(object):
 
     @app.route("/")
     @instrumented_route
+    def root(self, request):
+        request.redirect("/efolder-express/")
+        return succeed(None)
+
+    @app.route("/efolder-express/")
+    @instrumented_route
     def index(self, request):
         return self.render_template("index.html")
 
-    @app.route("/download/", methods=["POST"])
+    @app.route("/efolder-express/download/", methods=["POST"])
     @instrumented_route
     @inlineCallbacks
     def download(self, request):
@@ -163,10 +169,10 @@ class DownloadEFolder(object):
         yield self.download_database.create_download(request_id, file_number)
         self.start_download(file_number, request_id)
 
-        request.redirect("/download/{}/".format(request_id))
+        request.redirect("/efolder-express/download/{}/".format(request_id))
         returnValue(None)
 
-    @app.route("/download/<request_id>/")
+    @app.route("/efolder-express/download/<request_id>/")
     @instrumented_route
     @inlineCallbacks
     def download_status(self, request, request_id):
@@ -177,7 +183,7 @@ class DownloadEFolder(object):
             "status": download
         }))
 
-    @app.route("/download/<request_id>/zip/")
+    @app.route("/efolder-express/download/<request_id>/zip/")
     @instrumented_route
     @inlineCallbacks
     def download_zip(self, request, request_id):
