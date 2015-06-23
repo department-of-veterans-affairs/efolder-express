@@ -17,7 +17,7 @@
 
         {% if status.completed %}
             <br />
-            <a href="/download/{{ status.request_id }}/zip/" class="btn btn-primary btn-lg btn-block">Download .zip!</a>
+            <a href="/efolder-express/download/{{ status.request_id }}/zip/" class="btn btn-primary btn-lg btn-block">Download .zip!</a>
             <br />
             <br />
         {% elif status.state == "ERRORED" %}
@@ -29,7 +29,7 @@
 
                     <br />
                     <br />
-                    <p class="text-center"><a href="/">Click here to try again.</a></p>
+                    <p class="text-center"><a href="/efolder-express/">Click here to try again.</a></p>
                 </p>
             </div>
         {% else %}
