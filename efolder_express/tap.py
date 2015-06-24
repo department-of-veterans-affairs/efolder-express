@@ -56,7 +56,8 @@ class DeferredQueueConsumerService(Service):
 
     @inlineCallbacks
     def start_consume_queue(self):
-        # TODO: termination
+        # Without any special termination logic, SIGINT kills the process
+        # cleanly. So that seems sufficient.
         while True:
             item = yield self.queue.get()
             # TODO: error handling
