@@ -35,12 +35,13 @@ class DownloadEFolder(object):
     app = klein.Klein()
 
     def __init__(self, logger, download_database, storage_path, fernet,
-                 vbms_client):
+                 vbms_client, queue):
         self.logger = logger
         self.download_database = download_database
         self.storage_path = storage_path
         self.fernet = fernet
         self.vbms_client = vbms_client
+        self.queue = queue
 
         self.jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(
@@ -51,7 +52,7 @@ class DownloadEFolder(object):
         self.document_types = DeferredValue()
 
     @classmethod
-    def from_config(cls, reactor, logger, config_path):
+    def from_config(cls, reactor, logger, queue, config_path):
         with open(config_path) as f:
             config = yaml.safe_load(f)
 
@@ -79,6 +80,7 @@ class DownloadEFolder(object):
                 ca_cert=config["vbms"].get("ca_cert"),
                 client_cert=config["vbms"].get("client_cert"),
             ),
+            queue,
         )
 
     def render_template(self, template_name, data={}):
@@ -112,7 +114,9 @@ class DownloadEFolder(object):
             ]
             yield self.download_database.create_documents(documents)
             for doc in documents:
-                self.start_file_download(logger, request_id, doc)
+                self.queue.put(functools.partial(
+                    self.start_file_download, logger, request_id, doc
+                ))
 
     @inlineCallbacks
     def start_file_download(self, logger, request_id, document):
@@ -167,7 +171,9 @@ class DownloadEFolder(object):
         request_id = str(uuid.uuid4())
 
         yield self.download_database.create_download(request_id, file_number)
-        self.start_download(file_number, request_id)
+        self.queue.put(functools.partial(
+            self.start_download, file_number, request_id
+        ))
 
         request.redirect("/efolder-express/download/{}/".format(request_id))
         returnValue(None)

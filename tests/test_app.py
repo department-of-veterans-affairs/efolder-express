@@ -12,7 +12,8 @@ def app():
         None,
         None,
         None,
-        FakeVBMSClient(),
+        vbms_client=FakeVBMSClient(),
+        queue=None,
     )
 
 
