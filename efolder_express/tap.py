@@ -1,6 +1,6 @@
 from twisted.application.internet import TCPServer
 from twisted.application.service import MultiService, Service
-from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import inlineCallbacks, DeferredQueue
 from twisted.python import usage, log
 from twisted.web.server import Site
 
@@ -45,12 +45,32 @@ class CreateDatabaseService(Service):
             self.reactor.stop()
 
 
+class DeferredQueueConsumerService(Service):
+    def __init__(self, queue, handler):
+        self.queue = queue
+        self.handler = handler
+
+    def startService(self):
+        Service.startService(self)
+        self.start_consume_queue()
+
+    @inlineCallbacks
+    def start_consume_queue(self):
+        # TODO: termination
+        while True:
+            item = yield self.queue.get()
+            # TODO: error handling
+            yield self.handler(item)
+
+
 def makeService(options):
     from twisted.internet import reactor
 
+    queue = DeferredQueue()
     app = DownloadEFolder.from_config(
         reactor,
         Logger(log),
+        queue,
         options["config"],
     )
 
@@ -65,4 +85,8 @@ def makeService(options):
         Site(HSTSResource(app.app.resource()), logPath="/dev/null"),
         reactor=reactor
     ).setServiceParent(service)
+    for _ in xrange(8):
+        DeferredQueueConsumerService(
+            queue, lambda item: item()
+        ).setServiceParent(service)
     return service
