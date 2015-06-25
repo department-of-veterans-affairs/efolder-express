@@ -219,6 +219,11 @@ class DownloadDatabase(object):
             self._downloads.c.request_id == request_id
         ).values(state="ERRORED"))
 
+    def mark_download_manifest_downloaded(self, request_id):
+        return self._engine.execute(self._downloads.update().where(
+            self._downloads.c.request_id == request_id
+        ).values(state="MANIFEST_DOWNLOADED"))
+
     def create_documents(self, documents):
         return self._engine.execute(self._documents.insert(), [
             {

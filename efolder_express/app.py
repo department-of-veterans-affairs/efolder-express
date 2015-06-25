@@ -117,6 +117,9 @@ class DownloadEFolder(object):
                 self.queue.put(functools.partial(
                     self.start_file_download, logger, request_id, doc
                 ))
+            yield self.download_database.mark_download_manifest_downloaded(
+                request_id
+            )
 
     @inlineCallbacks
     def start_file_download(self, logger, request_id, document):

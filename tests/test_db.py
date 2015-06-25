@@ -57,6 +57,16 @@ class TestDownloadDatabase(object):
         download = success_result_of(db.get_download("test-request-id"))
         assert download.state == "ERRORED"
 
+    def test_mark_download_manifest_downloaded(self, db):
+        d = db.create_download("test-request-id", "123456789")
+        success_result_of(d)
+
+        d = db.mark_download_manifest_downloaded("test-request-id")
+        success_result_of(d)
+
+        download = success_result_of(db.get_download("test-request-id"))
+        assert download.state == "MANIFEST_DOWNLOADED"
+
     def test_create_documents(self, db):
         d = db.create_download("test-request-id", "123456789")
         success_result_of(d)
