@@ -193,6 +193,35 @@ class DownloadDatabase(object):
         for table in self._metadata.sorted_tables:
             yield self._engine.execute(CreateTable(table))
 
+    @inlineCallbacks
+    def get_pending_work(self):
+        """
+        Returns a 2-tuple of:
+            (
+                [list of downloads with status STARTED],
+                [list documents with no content_location and not errored]
+            )
+        """
+        download_rows = yield ((yield self._engine.execute(
+            self._downloads.select().where(
+                self._downloads.c.state == "STARTED"
+            )
+        )).fetchall())
+        document_rows = yield ((yield self._engine.execute(
+            self._documents.select().where(
+                self._documents.c.content_location.is_(None) &
+                ~self._documents.c.errored
+            )
+        )).fetchall())
+        # TODO: O(n) queries
+        returnValue((
+            [
+                (yield self.get_download(row[self._downloads.c.request_id]))
+                for row in download_rows
+            ],
+            [self._document_from_row(row) for row in document_rows],
+        ))
+
     def _document_from_row(self, row):
         return Document(
             id=row[self._documents.c.id],

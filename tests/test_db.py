@@ -2,7 +2,9 @@ import datetime
 
 import pytest
 
-from efolder_express.db import DownloadDatabase, DownloadNotFound, Document
+from efolder_express.db import (
+    DownloadDatabase, DownloadNotFound, DownloadStatus, Document
+)
 
 from .utils import FakeReactor, FakeThreadPool, success_result_of
 
@@ -147,3 +149,52 @@ class TestDownloadDatabase(object):
         assert download.completed
         assert download.percent_completed == 100
         assert download.documents[0].content_location == "/path/to/content"
+
+    def test_get_pending_work_downloads(self, db):
+        d = db.create_download("test-request-id", "123456789")
+        success_result_of(d)
+
+        d = db.get_pending_work()
+        downloads, documents = success_result_of(d)
+        assert documents == []
+        [download] = downloads
+        assert download.request_id == "test-request-id"
+
+        d = db.mark_download_manifest_downloaded("test-request-id")
+        success_result_of(d)
+
+        d = db.get_pending_work()
+        assert success_result_of(d) == ([], [])
+
+    def test_get_pending_work_documents(self, db):
+        d = db.create_download("test-request-id", "123456789")
+        success_result_of(d)
+        d = db.mark_download_manifest_downloaded("test-request-id")
+        success_result_of(d)
+
+        doc = Document(
+            id="test-document-id",
+            download_id="test-request-id",
+            document_id="{ABCD}",
+            doc_type="00356",
+            filename="file.pdf",
+            received_at=datetime.datetime.utcnow(),
+            source="CUI",
+            content_location=None,
+            errored=False,
+        )
+
+        d = db.create_documents([doc])
+        success_result_of(d)
+
+        d = db.get_pending_work()
+        downloads, documents = success_result_of(d)
+        assert downloads == []
+        [document] = documents
+        assert document.id == "test-document-id"
+
+        d = db.set_document_content_location(doc, "/path/to/content")
+        success_result_of(d)
+
+        d = db.get_pending_work()
+        assert success_result_of(d) == ([], [])
