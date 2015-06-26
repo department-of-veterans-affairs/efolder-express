@@ -154,8 +154,8 @@ class DownloadEFolder(object):
         })
 
     @inlineCallbacks
-    def enqueue_pending_work(self):
-        downloads, documents = yield self.db.get_pending_work()
+    def queue_pending_work(self):
+        downloads, documents = yield self.download_database.get_pending_work()
         for download in downloads:
             self.queue.put(functools.partial(
                 self.start_download, download.file_number, download.request_id,
