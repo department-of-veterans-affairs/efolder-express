@@ -115,14 +115,14 @@ class DownloadEFolder(object):
             yield self.download_database.create_documents(documents)
             for doc in documents:
                 self.queue.put(functools.partial(
-                    self.start_file_download, logger, request_id, doc
+                    self.start_file_download, logger, doc
                 ))
             yield self.download_database.mark_download_manifest_downloaded(
                 request_id
             )
 
     @inlineCallbacks
-    def start_file_download(self, logger, request_id, document):
+    def start_file_download(self, logger, document):
         logger = logger.bind(document_id=document.document_id)
         logger.emit("get_document.start")
 
@@ -152,6 +152,21 @@ class DownloadEFolder(object):
             int(c["type_id"]): c["description"]
             for c in document_types
         })
+
+    @inlineCallbacks
+    def queue_pending_work(self):
+        downloads, documents = yield self.download_database.get_pending_work()
+        for download in downloads:
+            self.queue.put(functools.partial(
+                self.start_download, download.file_number, download.request_id,
+            ))
+        for document in documents:
+            # TODO: self.logger doesn't include any info about the
+            # DownloadStatus. When triggered from the "usual" path it has
+            # ``file_number`` and ``request_id`` keys.
+            self.queue.put(functools.partial(
+                self.start_file_download, self.logger, document
+            ))
 
     @app.route("/")
     @instrumented_route

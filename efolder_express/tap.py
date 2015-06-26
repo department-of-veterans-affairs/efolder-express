@@ -79,6 +79,7 @@ def makeService(options):
         return CreateDatabaseService(reactor, app)
 
     app.start_fetch_document_types()
+    app.queue_pending_work()
 
     service = MultiService()
     TCPServer(
