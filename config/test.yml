@@ -1,4 +1,4 @@
-# This configuration hits the VBSM "test" environment
+env: test
 
 vbms:
     endpoint_url: https://filenet.test.vbms.aide.oit.va.gov/vbmsp2-cms/streaming/eDocumentService-v4

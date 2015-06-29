@@ -10,6 +10,21 @@
             <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
 
+        <style type="text/css">
+            .env-bar {
+                position: absolute;
+                top: 0;
+                width: 100%;
+                box-sizing: border-box;
+                background-color: rgb(255, 231, 97);
+                background-image: linear-gradient(135deg, rgba(0, 0, 0, 0.0392157) 25%, transparent 25%, transparent 50%, rgba(0, 0, 0, 0.0392157) 50%, rgba(0, 0, 0, 0.0392157) 75%, transparent 75%, transparent);
+                color: black;
+                text-align: center;
+                font-size: 18px;
+                padding-top: 8px;
+                padding-bottom: 8px;
+            }
+        </style>
         {% block extra_head %}{% endblock %}
     </head>
     <body>
@@ -22,6 +37,11 @@
                 <a href="https://github.com/department-of-veterans-affairs/efolder-express">Source code.</a>
             </footer>
         </div>
+        {% if env %}
+            <div class="env-bar">
+                This is the <strong>{{ env|upper }}</strong> environment.
+            </div>
+        {% endif %}
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
     </body>

@@ -35,13 +35,14 @@ class DownloadEFolder(object):
     app = klein.Klein()
 
     def __init__(self, logger, download_database, storage_path, fernet,
-                 vbms_client, queue):
+                 vbms_client, queue, env_name):
         self.logger = logger
         self.download_database = download_database
         self.storage_path = storage_path
         self.fernet = fernet
         self.vbms_client = vbms_client
         self.queue = queue
+        self.env_name = env_name
 
         self.jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(
@@ -81,11 +82,12 @@ class DownloadEFolder(object):
                 client_cert=config["vbms"].get("client_cert"),
             ),
             queue,
+            config["env"],
         )
 
     def render_template(self, template_name, data={}):
         t = self.jinja_env.get_template(template_name)
-        return t.render(data)
+        return t.render(dict(data, env=self.env_name))
 
     @inlineCallbacks
     def start_download(self, file_number, request_id):
