@@ -51,10 +51,11 @@ class DownloadStatus(object):
                 if doc.content_location:
                     with open(doc.content_location) as f:
                         data = fernet.decrypt(f.read())
-                    z.writestr(
+                    info = zipfile.ZipInfo(
                         "{}-eFolder/{}".format(self.file_number, doc.filename),
-                        data,
+                        doc.received_at.timetuple()[:6],
                     )
+                    z.writestr(info, data)
 
             readme_template = jinja_env.get_template("readme.txt")
             z.writestr(
