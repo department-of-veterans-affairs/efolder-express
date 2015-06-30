@@ -14,6 +14,7 @@ def app():
         None,
         vbms_client=FakeVBMSClient(),
         queue=None,
+        env_name=None,
     )
 
 
