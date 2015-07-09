@@ -1,6 +1,6 @@
 alchimia==0.6.1
 characteristic==14.3.0
-cryptography==0.9.2
+cryptography==0.9.3
 enum34==1.0.4
 idna==2.0
 ipaddress==1.0.7
