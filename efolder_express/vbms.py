@@ -1,5 +1,6 @@
 import json
 import os
+import pipes
 import stat
 import tempfile
 
@@ -94,7 +95,7 @@ STDOUT.flush()
                             f.name,
                             " ".join(map(pipes.quote, args))
                         )
-                    ]
+                    ],
                     env=os.environ,
                     path=self._connect_vbms_path,
                     reactor=self._reactor
