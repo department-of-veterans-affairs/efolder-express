@@ -1,5 +1,6 @@
 import json
 import os
+import pipes
 import stat
 import tempfile
 
@@ -87,8 +88,14 @@ STDOUT.flush()
             timer = logger.time("process.spawn")
             try:
                 stdout, stderr, exit_code = yield getProcessOutputAndValue(
-                    self._bundle_path,
-                    ["exec", f.name] + args,
+                    '/bin/bash', [
+                        '-lc',
+                        '{} exec {} {}'.format(
+                            self._bundle_path,
+                            f.name,
+                            " ".join(map(pipes.quote, args))
+                        )
+                    ],
                     env=os.environ,
                     path=self._connect_vbms_path,
                     reactor=self._reactor
