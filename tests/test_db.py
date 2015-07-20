@@ -94,6 +94,16 @@ class TestDownloadDatabase(object):
         [doc] = download.documents
         assert doc.id == "test-document-id"
 
+    def test_create_documents_empty(self, db):
+        d = db.create_download("test-request-id", "123456789")
+        success_result_of(d)
+
+        d = db.create_documents([])
+        success_result_of(d)
+
+        download = success_result_of(db.get_download("test-request-id"))
+        assert len(download.documents) == 0
+
     def test_mark_document_errored(self, db):
         d = db.create_download("test-request-id", "123456789")
         success_result_of(d)

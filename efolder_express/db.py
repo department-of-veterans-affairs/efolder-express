@@ -8,7 +8,7 @@ import alchimia
 import sqlalchemy
 from sqlalchemy.schema import CreateTable
 
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks, returnValue, succeed
 
 
 class DownloadNotFound(Exception):
@@ -255,6 +255,8 @@ class DownloadDatabase(object):
         ).values(state="MANIFEST_DOWNLOADED"))
 
     def create_documents(self, documents):
+        if not documents:
+            return succeed(None)
         return self._engine.execute(self._documents.insert(), [
             {
                 "id": doc.id,
