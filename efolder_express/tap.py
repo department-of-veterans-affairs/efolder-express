@@ -5,7 +5,6 @@ from twisted.python import usage, log
 from twisted.web.server import Site
 
 from efolder_express.app import DownloadEFolder
-from efolder_express.http import HSTSResource
 from efolder_express.log import Logger
 
 
@@ -84,7 +83,7 @@ def makeService(options):
     service = MultiService()
     TCPServer(
         8080,
-        Site(HSTSResource(app.app.resource()), logPath="/dev/null"),
+        Site(app.app.resource(), logPath="/dev/null"),
         reactor=reactor
     ).setServiceParent(service)
     for _ in xrange(8):
