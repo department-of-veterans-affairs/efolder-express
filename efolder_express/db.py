@@ -253,10 +253,11 @@ class DownloadDatabase(object):
             state="STARTED",
         ))
 
-    def mark_download_errored(self, request_id):
-        return self._engine.execute(self._downloads.update().where(
+    def mark_download_errored(self, logger, request_id):
+        query = self._downloads.update().where(
             self._downloads.c.request_id == request_id
-        ).values(state="ERRORED"))
+        ).values(state="ERRORED")
+        return self._execute(logger, "mark_download_errored", query)
 
     def mark_download_manifest_downloaded(self, request_id):
         return self._engine.execute(self._downloads.update().where(
