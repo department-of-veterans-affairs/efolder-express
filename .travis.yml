@@ -8,5 +8,9 @@ cache:
         - $HOME/.cache/pip
 
 
-install: pip install -r requirements.txt -r test-requirements.txt
-script: py.test
+install:
+    - pip install -r requirements.txt -r test-requirements.txt flake8 flake8-import-order
+
+script:
+    - py.test
+    - flake8
