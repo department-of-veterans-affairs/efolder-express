@@ -51,10 +51,12 @@ class TestDownloadDatabase(object):
             success_result_of(d)
 
     def test_mark_download_errored(self, db):
+        logger = Logger(FakeMemoryLog())
+
         d = db.create_download("test-request-id", "123456789")
         success_result_of(d)
 
-        d = db.mark_download_errored("test-request-id")
+        d = db.mark_download_errored(logger, "test-request-id")
         success_result_of(d)
 
         download = success_result_of(db.get_download("test-request-id"))

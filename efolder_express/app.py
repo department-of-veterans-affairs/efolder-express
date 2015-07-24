@@ -106,7 +106,9 @@ class DownloadEFolder(object):
                 stderr=e.stderr,
                 exit_code=e.exit_code,
             ).emit("list_documents.error")
-            yield self.download_database.mark_download_errored(request_id)
+            yield self.download_database.mark_download_errored(
+                logger, request_id
+            )
         else:
             logger.emit("list_documents.success")
 
