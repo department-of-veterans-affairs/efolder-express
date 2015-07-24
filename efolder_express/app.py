@@ -122,7 +122,7 @@ class DownloadEFolder(object):
                     self.start_file_download, logger, doc
                 ))
             yield self.download_database.mark_download_manifest_downloaded(
-                request_id
+                logger, request_id
             )
 
     @inlineCallbacks

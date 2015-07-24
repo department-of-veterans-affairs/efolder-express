@@ -63,10 +63,12 @@ class TestDownloadDatabase(object):
         assert download.state == "ERRORED"
 
     def test_mark_download_manifest_downloaded(self, db):
+        logger = Logger(FakeMemoryLog())
+
         d = db.create_download("test-request-id", "123456789")
         success_result_of(d)
 
-        d = db.mark_download_manifest_downloaded("test-request-id")
+        d = db.mark_download_manifest_downloaded(logger, "test-request-id")
         success_result_of(d)
 
         download = success_result_of(db.get_download("test-request-id"))
@@ -168,6 +170,8 @@ class TestDownloadDatabase(object):
         assert download.documents[0].content_location == "/path/to/content"
 
     def test_get_pending_work_downloads(self, db):
+        logger = Logger(FakeMemoryLog())
+
         d = db.create_download("test-request-id", "123456789")
         success_result_of(d)
 
@@ -177,7 +181,7 @@ class TestDownloadDatabase(object):
         [download] = downloads
         assert download.request_id == "test-request-id"
 
-        d = db.mark_download_manifest_downloaded("test-request-id")
+        d = db.mark_download_manifest_downloaded(logger, "test-request-id")
         success_result_of(d)
 
         d = db.get_pending_work()
@@ -188,7 +192,7 @@ class TestDownloadDatabase(object):
 
         d = db.create_download("test-request-id", "123456789")
         success_result_of(d)
-        d = db.mark_download_manifest_downloaded("test-request-id")
+        d = db.mark_download_manifest_downloaded(logger, "test-request-id")
         success_result_of(d)
 
         doc = Document(
