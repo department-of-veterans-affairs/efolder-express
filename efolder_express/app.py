@@ -138,7 +138,9 @@ class DownloadEFolder(object):
                 stderr=e.stderr,
                 exit_code=e.exit_code,
             ).emit("get_document.error")
-            yield self.download_database.mark_document_errored(document)
+            yield self.download_database.mark_document_errored(
+                logger, document
+            )
         else:
             logger.emit("get_document.success")
             target = self.storage_path.child(str(uuid.uuid4()))

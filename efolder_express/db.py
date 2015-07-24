@@ -281,10 +281,11 @@ class DownloadDatabase(object):
             for doc in documents
         ])
 
-    def mark_document_errored(self, document):
-        return self._engine.execute(self._documents.update().where(
+    def mark_document_errored(self, logger, document):
+        query = self._documents.update().where(
             self._documents.c.id == document.id
-        ).values(errored=True))
+        ).values(errored=True)
+        return self._execute(logger, "mark_document_errored", query)
 
     def set_document_content_location(self, logger, document, path):
         query = self._documents.update().where(
