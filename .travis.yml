@@ -1,0 +1,12 @@
+language: python
+python:
+    - 2.7
+    - pypy
+
+cache:
+    directories:
+        - $HOME/.cache/pip
+
+
+install: pip install -r requirements.txt -r test-requirements.txt
+script: py.test
