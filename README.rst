@@ -1,6 +1,9 @@
 eFolder Express
 ===============
 
+.. image:: https://travis-ci.org/department-of-veterans-affairs/efolder-express.svg?branch=master
+    :target: https://travis-ci.org/department-of-veterans-affairs/efolder-express
+
 This is a small application to facilitate downloading the entire eFolder from
 VBMS as a single .zip file.
 
