@@ -40,7 +40,9 @@ class TestDownloadDatabase(object):
         d = db.create_download(logger, "test-request-id", "123456789")
         success_result_of(d)
 
-        download = success_result_of(db.get_download("test-request-id"))
+        download = success_result_of(db.get_download(
+            logger, "test-request-id"
+        ))
         assert download.request_id == "test-request-id"
         assert download.file_number == "123456789"
         assert download.state == "STARTED"
@@ -50,7 +52,9 @@ class TestDownloadDatabase(object):
         assert download.percent_completed == 5
 
     def test_get_download_non_existent(self, db):
-        d = db.get_download("non-existent")
+        logger = Logger(FakeMemoryLog())
+
+        d = db.get_download(logger, "non-existent")
         with pytest.raises(DownloadNotFound):
             success_result_of(d)
 
@@ -63,7 +67,9 @@ class TestDownloadDatabase(object):
         d = db.mark_download_errored(logger, "test-request-id")
         success_result_of(d)
 
-        download = success_result_of(db.get_download("test-request-id"))
+        download = success_result_of(db.get_download(
+            logger, "test-request-id"
+        ))
         assert download.state == "ERRORED"
 
     def test_mark_download_manifest_downloaded(self, db):
@@ -75,7 +81,9 @@ class TestDownloadDatabase(object):
         d = db.mark_download_manifest_downloaded(logger, "test-request-id")
         success_result_of(d)
 
-        download = success_result_of(db.get_download("test-request-id"))
+        download = success_result_of(db.get_download(
+            logger, "test-request-id"
+        ))
         assert download.state == "MANIFEST_DOWNLOADED"
 
     def test_create_documents(self, db):
@@ -99,7 +107,9 @@ class TestDownloadDatabase(object):
         ])
         success_result_of(d)
 
-        download = success_result_of(db.get_download("test-request-id"))
+        download = success_result_of(db.get_download(
+            logger, "test-request-id"
+        ))
         assert len(download.documents) == 1
         assert not download.completed
         assert download.percent_completed == 0
@@ -116,7 +126,9 @@ class TestDownloadDatabase(object):
         d = db.create_documents([])
         success_result_of(d)
 
-        download = success_result_of(db.get_download("test-request-id"))
+        download = success_result_of(db.get_download(
+            logger, "test-request-id"
+        ))
         assert len(download.documents) == 0
 
     def test_mark_document_errored(self, db):
@@ -143,7 +155,9 @@ class TestDownloadDatabase(object):
         d = db.mark_document_errored(logger, doc)
         success_result_of(d)
 
-        download = success_result_of(db.get_download("test-request-id"))
+        download = success_result_of(db.get_download(
+            logger, "test-request-id"
+        ))
         assert download.completed
         assert download.percent_completed == 100
         assert download.documents[0].errored
@@ -172,7 +186,9 @@ class TestDownloadDatabase(object):
         d = db.set_document_content_location(logger, doc, "/path/to/content")
         success_result_of(d)
 
-        download = success_result_of(db.get_download("test-request-id"))
+        download = success_result_of(db.get_download(
+            logger, "test-request-id"
+        ))
         assert download.completed
         assert download.percent_completed == 100
         assert download.documents[0].content_location == "/path/to/content"
@@ -183,7 +199,7 @@ class TestDownloadDatabase(object):
         d = db.create_download(logger, "test-request-id", "123456789")
         success_result_of(d)
 
-        d = db.get_pending_work()
+        d = db.get_pending_work(logger)
         downloads, documents = success_result_of(d)
         assert documents == []
         [download] = downloads
@@ -192,7 +208,7 @@ class TestDownloadDatabase(object):
         d = db.mark_download_manifest_downloaded(logger, "test-request-id")
         success_result_of(d)
 
-        d = db.get_pending_work()
+        d = db.get_pending_work(logger)
         assert success_result_of(d) == ([], [])
 
     def test_get_pending_work_documents(self, db):
@@ -218,7 +234,7 @@ class TestDownloadDatabase(object):
         d = db.create_documents([doc])
         success_result_of(d)
 
-        d = db.get_pending_work()
+        d = db.get_pending_work(logger)
         downloads, documents = success_result_of(d)
         assert downloads == []
         [document] = documents
@@ -227,5 +243,5 @@ class TestDownloadDatabase(object):
         d = db.set_document_content_location(logger, doc, "/path/to/content")
         success_result_of(d)
 
-        d = db.get_pending_work()
+        d = db.get_pending_work(logger)
         assert success_result_of(d) == ([], [])
