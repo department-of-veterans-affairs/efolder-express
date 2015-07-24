@@ -3,8 +3,11 @@ import datetime
 import pytest
 
 from efolder_express.db import DownloadDatabase, DownloadNotFound, Document
+from efolder_express.log import Logger
 
-from .utils import FakeReactor, FakeThreadPool, success_result_of
+from .utils import (
+    FakeReactor, FakeThreadPool, FakeMemoryLog, success_result_of
+)
 
 
 @pytest.fixture
@@ -132,6 +135,8 @@ class TestDownloadDatabase(object):
         assert download.documents[0].errored
 
     def test_set_document_content_location(self, db):
+        logger = Logger(FakeMemoryLog())
+
         d = db.create_download("test-request-id", "123456789")
         success_result_of(d)
 
@@ -150,7 +155,7 @@ class TestDownloadDatabase(object):
         d = db.create_documents([doc])
         success_result_of(d)
 
-        d = db.set_document_content_location(doc, "/path/to/content")
+        d = db.set_document_content_location(logger, doc, "/path/to/content")
         success_result_of(d)
 
         download = success_result_of(db.get_download("test-request-id"))
@@ -175,6 +180,8 @@ class TestDownloadDatabase(object):
         assert success_result_of(d) == ([], [])
 
     def test_get_pending_work_documents(self, db):
+        logger = Logger(FakeMemoryLog())
+
         d = db.create_download("test-request-id", "123456789")
         success_result_of(d)
         d = db.mark_download_manifest_downloaded("test-request-id")
@@ -201,7 +208,7 @@ class TestDownloadDatabase(object):
         [document] = documents
         assert document.id == "test-document-id"
 
-        d = db.set_document_content_location(doc, "/path/to/content")
+        d = db.set_document_content_location(logger, doc, "/path/to/content")
         success_result_of(d)
 
         d = db.get_pending_work()

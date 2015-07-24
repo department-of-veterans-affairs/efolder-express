@@ -195,6 +195,15 @@ class DownloadDatabase(object):
             yield self._engine.execute(CreateTable(table))
 
     @inlineCallbacks
+    def _execute(self, logger, query_name, query):
+        timer = logger.time("sql.{}".format(query_name))
+        try:
+            result = yield self._engine.execute(query)
+        finally:
+            timer.stop()
+        returnValue(result)
+
+    @inlineCallbacks
     def get_pending_work(self):
         """
         Returns a 2-tuple of:
@@ -277,12 +286,13 @@ class DownloadDatabase(object):
             self._documents.c.id == document.id
         ).values(errored=True))
 
-    def set_document_content_location(self, document, path):
-        return self._engine.execute(self._documents.update().where(
+    def set_document_content_location(self, logger, document, path):
+        query = self._documents.update().where(
             self._documents.c.id == document.id,
         ).values(
             content_location=path,
-        ))
+        )
+        return self._execute(logger, "set_document_content_location", query)
 
     @inlineCallbacks
     def get_download(self, request_id):
