@@ -245,13 +245,14 @@ class DownloadDatabase(object):
             errored=row[self._documents.c.errored],
         )
 
-    def create_download(self, request_id, file_number):
-        return self._engine.execute(self._downloads.insert().values(
+    def create_download(self, logger, request_id, file_number):
+        query = self._downloads.insert().values(
             request_id=request_id,
             file_number=file_number,
             started_at=datetime.datetime.utcnow(),
             state="STARTED",
-        ))
+        )
+        return self._execute(logger, "create_download", query)
 
     def mark_download_errored(self, logger, request_id):
         query = self._downloads.update().where(
