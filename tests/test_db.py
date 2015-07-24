@@ -92,7 +92,7 @@ class TestDownloadDatabase(object):
         d = db.create_download(logger, "test-request-id", "123456789")
         success_result_of(d)
 
-        d = db.create_documents([
+        d = db.create_documents(logger, [
             Document(
                 id="test-document-id",
                 download_id="test-request-id",
@@ -123,7 +123,7 @@ class TestDownloadDatabase(object):
         d = db.create_download(logger, "test-request-id", "123456789")
         success_result_of(d)
 
-        d = db.create_documents([])
+        d = db.create_documents(logger, [])
         success_result_of(d)
 
         download = success_result_of(db.get_download(
@@ -149,7 +149,7 @@ class TestDownloadDatabase(object):
             errored=False,
         )
 
-        d = db.create_documents([doc])
+        d = db.create_documents(logger, [doc])
         success_result_of(d)
 
         d = db.mark_document_errored(logger, doc)
@@ -180,7 +180,7 @@ class TestDownloadDatabase(object):
             errored=False,
         )
 
-        d = db.create_documents([doc])
+        d = db.create_documents(logger, [doc])
         success_result_of(d)
 
         d = db.set_document_content_location(logger, doc, "/path/to/content")
@@ -231,7 +231,7 @@ class TestDownloadDatabase(object):
             errored=False,
         )
 
-        d = db.create_documents([doc])
+        d = db.create_documents(logger, [doc])
         success_result_of(d)
 
         d = db.get_pending_work(logger)
