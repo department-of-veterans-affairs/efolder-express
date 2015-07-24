@@ -24,16 +24,20 @@ class TestDownloadDatabase(object):
         return success_result_of(result.scalar())
 
     def test_create_download(self, db):
-        d = db.create_download("test-request-id", "123456789")
+        logger = Logger(FakeMemoryLog())
+
+        d = db.create_download(logger, "test-request-id", "123456789")
         success_result_of(d)
         assert self.scalar(db, db._downloads.select().count()) == 1
 
-        d = db.create_download("test-request-id-2", "987654321")
+        d = db.create_download(logger, "test-request-id-2", "987654321")
         success_result_of(d)
         assert self.scalar(db, db._downloads.select().count()) == 2
 
     def test_get_download(self, db):
-        d = db.create_download("test-request-id", "123456789")
+        logger = Logger(FakeMemoryLog())
+
+        d = db.create_download(logger, "test-request-id", "123456789")
         success_result_of(d)
 
         download = success_result_of(db.get_download("test-request-id"))
@@ -53,7 +57,7 @@ class TestDownloadDatabase(object):
     def test_mark_download_errored(self, db):
         logger = Logger(FakeMemoryLog())
 
-        d = db.create_download("test-request-id", "123456789")
+        d = db.create_download(logger, "test-request-id", "123456789")
         success_result_of(d)
 
         d = db.mark_download_errored(logger, "test-request-id")
@@ -65,7 +69,7 @@ class TestDownloadDatabase(object):
     def test_mark_download_manifest_downloaded(self, db):
         logger = Logger(FakeMemoryLog())
 
-        d = db.create_download("test-request-id", "123456789")
+        d = db.create_download(logger, "test-request-id", "123456789")
         success_result_of(d)
 
         d = db.mark_download_manifest_downloaded(logger, "test-request-id")
@@ -75,7 +79,9 @@ class TestDownloadDatabase(object):
         assert download.state == "MANIFEST_DOWNLOADED"
 
     def test_create_documents(self, db):
-        d = db.create_download("test-request-id", "123456789")
+        logger = Logger(FakeMemoryLog())
+
+        d = db.create_download(logger, "test-request-id", "123456789")
         success_result_of(d)
 
         d = db.create_documents([
@@ -102,7 +108,9 @@ class TestDownloadDatabase(object):
         assert doc.id == "test-document-id"
 
     def test_create_documents_empty(self, db):
-        d = db.create_download("test-request-id", "123456789")
+        logger = Logger(FakeMemoryLog())
+
+        d = db.create_download(logger, "test-request-id", "123456789")
         success_result_of(d)
 
         d = db.create_documents([])
@@ -114,7 +122,7 @@ class TestDownloadDatabase(object):
     def test_mark_document_errored(self, db):
         logger = Logger(FakeMemoryLog())
 
-        d = db.create_download("test-request-id", "123456789")
+        d = db.create_download(logger, "test-request-id", "123456789")
         success_result_of(d)
 
         doc = Document(
@@ -143,7 +151,7 @@ class TestDownloadDatabase(object):
     def test_set_document_content_location(self, db):
         logger = Logger(FakeMemoryLog())
 
-        d = db.create_download("test-request-id", "123456789")
+        d = db.create_download(logger, "test-request-id", "123456789")
         success_result_of(d)
 
         doc = Document(
@@ -172,7 +180,7 @@ class TestDownloadDatabase(object):
     def test_get_pending_work_downloads(self, db):
         logger = Logger(FakeMemoryLog())
 
-        d = db.create_download("test-request-id", "123456789")
+        d = db.create_download(logger, "test-request-id", "123456789")
         success_result_of(d)
 
         d = db.get_pending_work()
@@ -190,7 +198,7 @@ class TestDownloadDatabase(object):
     def test_get_pending_work_documents(self, db):
         logger = Logger(FakeMemoryLog())
 
-        d = db.create_download("test-request-id", "123456789")
+        d = db.create_download(logger, "test-request-id", "123456789")
         success_result_of(d)
         d = db.mark_download_manifest_downloaded(logger, "test-request-id")
         success_result_of(d)

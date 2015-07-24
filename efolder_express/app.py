@@ -194,7 +194,9 @@ class DownloadEFolder(object):
 
         request_id = str(uuid.uuid4())
 
-        yield self.download_database.create_download(request_id, file_number)
+        yield self.download_database.create_download(
+            self.logger, request_id, file_number
+        )
         self.queue.put(functools.partial(
             self.start_download, file_number, request_id
         ))
