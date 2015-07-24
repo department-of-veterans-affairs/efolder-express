@@ -212,12 +212,16 @@ class DownloadDatabase(object):
                 [list documents with no content_location and not errored]
             )
         """
-        download_rows = yield ((yield self._engine.execute(
+        download_rows = yield ((yield self._execute(
+            logger,
+            "get_pending_work.get_downloads",
             self._downloads.select().where(
                 self._downloads.c.state == "STARTED"
             )
         )).fetchall())
-        document_rows = yield ((yield self._engine.execute(
+        document_rows = yield ((yield self._execute(
+            logger,
+            "get_pending_work.get_documents",
             self._documents.select().where(
                 self._documents.c.content_location.is_(None) &
                 ~self._documents.c.errored
