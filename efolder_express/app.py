@@ -116,7 +116,7 @@ class DownloadEFolder(object):
                 Document.from_json(request_id, doc)
                 for doc in documents
             ]
-            yield self.download_database.create_documents(documents)
+            yield self.download_database.create_documents(logger, documents)
             for doc in documents:
                 self.queue.put(functools.partial(
                     self.start_file_download, logger, doc

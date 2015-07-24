@@ -195,10 +195,10 @@ class DownloadDatabase(object):
             yield self._engine.execute(CreateTable(table))
 
     @inlineCallbacks
-    def _execute(self, logger, query_name, query):
+    def _execute(self, logger, query_name, query, *args):
         timer = logger.time("sql.{}".format(query_name))
         try:
-            result = yield self._engine.execute(query)
+            result = yield self._engine.execute(query, *args)
         finally:
             timer.stop()
         returnValue(result)
@@ -270,11 +270,14 @@ class DownloadDatabase(object):
             logger, "mark_download_manifest_downloaded", query
         )
 
-    def create_documents(self, documents):
+    def create_documents(self, logger, documents):
         if not documents:
             return succeed(None)
-        return self._engine.execute(self._documents.insert(), [
-            {
+        return self._execute(
+            logger,
+            "create_documents",
+            self._documents.insert(),
+            [{
                 "id": doc.id,
                 "download_id": doc.download_id,
                 "document_id": doc.document_id,
@@ -284,9 +287,8 @@ class DownloadDatabase(object):
                 "source": doc.source,
                 "content_location": None,
                 "errored": False
-            }
-            for doc in documents
-        ])
+            } for doc in documents]
+        )
 
     def mark_document_errored(self, logger, document):
         query = self._documents.update().where(
