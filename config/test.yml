@@ -2,19 +2,19 @@ env: test
 
 vbms:
     endpoint_url: https://filenet.test.vbms.aide.oit.va.gov/vbmsp2-cms/streaming/eDocumentService-v4
-    keyfile: /Users/alex_gaynor/projects/va/vbms-credentials/test/client3.jks
-    samlfile: /Users/alex_gaynor/projects/va/vbms-credentials/test/samlToken-cui-tst.xml
+    keyfile: /Users/vacogaynoa/projects/va/vbms-credentials/test/client3.jks
+    samlfile: /Users/vacogaynoa/projects/va/vbms-credentials/test/samlToken-cui-tst.xml
     keypass: importkey
 
 connect_vbms:
-    path: /Users/alex_gaynor/projects/va/connect_vbms/
-    bundle_path: /Users/alex_gaynor/.gem/ruby/2.2.0/bin/bundle
+    path: /Users/vacogaynoa/projects/va/connect_vbms/
+    bundle_path: /Users/vacogaynoa/.rbenv/shims/bundle
 
 db:
     uri: sqlite:///dev.db
 
 storage:
-    filesystem: /Users/alex_gaynor/projects/va/efolder-express/media/
+    filesystem: /Users/vacogaynoa/projects/va/efolder-express/media/
 
 encryption_keys:
     - "HA6EtTVMI0qTDnSSKtWdZxmJFA8lFb0NrJiZYiNsTYs="
