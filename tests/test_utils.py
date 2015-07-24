@@ -4,7 +4,7 @@ from twisted.internet.defer import fail, succeed
 
 from efolder_express.utils import DeferredValue
 
-from .utils import success_result_of, no_result
+from .utils import no_result, success_result_of
 
 
 class TestSuccessResultOf(object):

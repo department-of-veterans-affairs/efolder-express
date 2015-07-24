@@ -2,11 +2,11 @@ import datetime
 
 import pytest
 
-from efolder_express.db import DownloadDatabase, DownloadNotFound, Document
+from efolder_express.db import Document, DownloadDatabase, DownloadNotFound
 from efolder_express.log import Logger
 
 from .utils import (
-    FakeReactor, FakeThreadPool, FakeMemoryLog, success_result_of
+    FakeMemoryLog, FakeReactor, FakeThreadPool, success_result_of
 )
 
 
