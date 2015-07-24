@@ -161,7 +161,9 @@ class DownloadEFolder(object):
 
     @inlineCallbacks
     def queue_pending_work(self):
-        downloads, documents = yield self.download_database.get_pending_work()
+        downloads, documents = yield self.download_database.get_pending_work(
+            self.logger
+        )
         for download in downloads:
             self.queue.put(functools.partial(
                 self.start_download, download.file_number, download.request_id,
@@ -209,7 +211,7 @@ class DownloadEFolder(object):
     @inlineCallbacks
     def download_status(self, request, request_id):
         download = yield self.download_database.get_download(
-            request_id=request_id
+            self.logger, request_id=request_id
         )
         returnValue(self.render_template("download.html", {
             "status": download
@@ -220,7 +222,7 @@ class DownloadEFolder(object):
     @inlineCallbacks
     def download_zip(self, request, request_id):
         download = yield self.download_database.get_download(
-            request_id=request_id
+            self.logger, request_id=request_id
         )
         assert download.completed
 

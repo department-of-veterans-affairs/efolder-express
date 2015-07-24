@@ -204,7 +204,7 @@ class DownloadDatabase(object):
         returnValue(result)
 
     @inlineCallbacks
-    def get_pending_work(self):
+    def get_pending_work(self, logger):
         """
         Returns a 2-tuple of:
             (
@@ -226,7 +226,9 @@ class DownloadDatabase(object):
         # TODO: O(n) queries
         returnValue((
             [
-                (yield self.get_download(row[self._downloads.c.request_id]))
+                (yield self.get_download(
+                    logger, row[self._downloads.c.request_id]
+                ))
                 for row in download_rows
             ],
             [self._document_from_row(row) for row in document_rows],
@@ -301,18 +303,22 @@ class DownloadDatabase(object):
         return self._execute(logger, "set_document_content_location", query)
 
     @inlineCallbacks
-    def get_download(self, request_id):
+    def get_download(self, logger, request_id):
         query = self._downloads.select().where(
             self._downloads.c.request_id == request_id
         )
-        download_row = (yield (yield self._engine.execute(query)).first())
+        download_row = (yield (yield self._execute(
+            logger, "get_download.get_download", query
+        )).first())
         if download_row is None:
             raise DownloadNotFound(request_id)
 
         query = self._documents.select().where(
             self._documents.c.download_id == request_id,
         )
-        document_rows = yield self._engine.execute(query)
+        document_rows = yield self._execute(
+            logger, "get_download.get_documents", query
+        )
 
         returnValue(DownloadStatus(
             request_id=download_row[self._downloads.c.request_id],
