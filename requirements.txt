@@ -4,7 +4,7 @@ cryptography==0.9.3
 enum34==1.0.4
 idna==2.0
 ipaddress==1.0.14
-Jinja2==2.7.3
+Jinja2==2.8.0
 klein==15.0.0
 MarkupSafe==0.23
 pyasn1==0.1.8
