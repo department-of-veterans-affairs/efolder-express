@@ -4,6 +4,7 @@ python:
     - pypy
 
 cache:
+    npm: true
     directories:
         - $HOME/.cache/pip
 
