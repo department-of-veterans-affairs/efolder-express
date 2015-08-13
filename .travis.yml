@@ -11,7 +11,10 @@ cache:
 install:
     - pip install -U pip
     - pip install -r requirements.txt -r test-requirements.txt flake8 flake8-import-order
+    - npm install pa11y
 
 script:
     - py.test
     - flake8
+    - twistd -no efolder-express --demo &
+    - "pa11y --level='warning' http://localhost:8080/"
