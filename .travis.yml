@@ -17,4 +17,4 @@ script:
     - py.test
     - flake8
     - twistd -no efolder-express --demo &
-    - "pa11y --level='warning' http://localhost:8080/"
+    - "pa11y --level='warning' http://127.0.0.1:8080/efolder-express/"
