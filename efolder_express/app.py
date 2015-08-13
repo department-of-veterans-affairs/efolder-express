@@ -85,6 +85,18 @@ class DownloadEFolder(object):
             config["env"],
         )
 
+    @classmethod
+    def create_demo(cls, reactor, logger):
+        return cls(
+            logger,
+            None,
+            None,
+            None,
+            None,
+            None,
+            "demo"
+        )
+
     def render_template(self, template_name, data={}):
         t = self.jinja_env.get_template(template_name)
         return t.render(dict(data, env=self.env_name))
