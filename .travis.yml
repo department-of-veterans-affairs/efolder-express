@@ -17,6 +17,3 @@ install:
 script:
     - py.test
     - flake8
-    - twistd -o efolder-express --demo
-    - "pa11y --level='error' --standard='Section508' http://127.0.0.1:8080/efolder-express/"
-    - "pa11y --level='error' --standard='Section508' http://127.0.0.1:8080/efolder-express/download/started/"
