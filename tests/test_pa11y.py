@@ -51,7 +51,7 @@ class TestAccessibility(object):
             which("pa11y")[0], [
                 "--level=error",
                 "--standard=Section508",
-                "http://127.0.0.1:{}{}".format(server._realPortNumber, url),
+                "http://127.0.0.1:{}{}".format(server.getHost().port, url),
             ],
             reactor=reactor,
             env=os.environ,
