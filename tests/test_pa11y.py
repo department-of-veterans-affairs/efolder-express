@@ -2,8 +2,8 @@ import os
 
 import pytest
 
-from twisted.internet.endpoints import TCP4ServerEndpoint
 from twisted.internet.defer import inlineCallbacks
+from twisted.internet.endpoints import TCP4ServerEndpoint
 from twisted.internet.utils import getProcessOutputAndValue
 from twisted.python.procutils import which
 from twisted.web.server import Site
@@ -18,6 +18,7 @@ from .utils import FakeMemoryLog
 def reactor():
     from twisted.internet import reactor
     return reactor
+
 
 @pytest.fixture
 def server(reactor):
