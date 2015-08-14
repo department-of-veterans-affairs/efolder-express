@@ -15,51 +15,8 @@
     <div class="jumbotron">
         <h1>Download status for <code>{{ status.file_number }}</code></h1>
 
-        {% if status.completed %}
-            <br />
-            <a href="/efolder-express/download/{{ status.request_id }}/zip/" class="btn btn-primary btn-lg btn-block">Download .zip!</a>
-            <br />
-            <br />
-        {% elif status.state == "ERRORED" %}
-            <div class="alert alert-danger" role="alert">
-                <p class="lead">
-                    There was an error getting the list of files in this eFolder.
-                    This can either indicate that you entered an incorrect file
-                    number, or that VBMS is having a problem.
-
-                    <br />
-                    <br />
-                    <p class="text-center"><a href="/efolder-express/">Click here to try again.</a></p>
-                </p>
-            </div>
-        {% else %}
-            <div class="progress">
-                <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="{{ status.percent_completed }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ status.percent_completed }}%">
-                    <span class="sr-only">{{ status.percent_completed }}% Complete</span>
-                </div>
-            </div>
-            {% if not status.documents %}
-                <p class="lead">
-                    We are gathering the list of files in the eFolder now, please be
-                    patient.
-                </p>
-            {% elif not status.completed %}
-                <p class="lead">
-                    We're downloading all of the files in the eFolder now. This
-                    should just take a moment.
-                </p>
-            {% endif %}
-        {% endif %}
-
-        {% if status.documents %}
-            <ul class="list-group">
-                {% for doc in status.documents %}
-                    <li class="list-group-item list-group-item-{% if doc.content_location %}success{% elif doc.errored %}danger{% else %}warning{% endif %}">
-                        <span class="download-file-icon glyphicon glyphicon-{% if doc.content_location %}ok-sign{% elif doc.errored %}remove-sign{% else %}option-horizontal{% endif %}"></span>
-                        {{ doc.filename }}
-                    </li>
-                {% endfor %}
-            </ul>
-        {% endif %}
+        <div class="content-area">
+            {% include "_download_status.html" %}
+        </div>
     </div>
 {% endblock %}
