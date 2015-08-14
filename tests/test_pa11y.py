@@ -32,7 +32,7 @@ def server(request, reactor):
         queue=None,
         env_name="testing",
     )
-    endpoint = TCP4ServerEndpoint(reactor, 8888)
+    endpoint = TCP4ServerEndpoint(reactor, 0)
     d = endpoint.listen(Site(app.app.resource(), logPath="/dev/null"))
 
     def addfinalizer(port):
@@ -46,12 +46,12 @@ def server(request, reactor):
 
 class TestAccessibility(object):
     @inlineCallbacks
-    def _pa11y_test(self, reactor, url):
+    def _pa11y_test(self, reactor, server, url):
         stdout, stderr, exit_code = yield getProcessOutputAndValue(
             which("pa11y")[0], [
                 "--level=error",
                 "--standard=Section508",
-                "http://127.0.0.1:8888{}".format(url),
+                "http://127.0.0.1:{}{}".format(server._realPortNumber, url),
             ],
             reactor=reactor,
             env=os.environ,
@@ -60,7 +60,7 @@ class TestAccessibility(object):
 
     @pytest.inlineCallbacks
     def test_index(self, reactor, server):
-        yield self._pa11y_test(reactor, "/efolder-express/")
+        yield self._pa11y_test(reactor, server, "/efolder-express/")
 
     @pytest.inlineCallbacks
     def test_another(self, reactor, server):
