@@ -1,6 +1,9 @@
 import json
 
+from twisted.internet.defer import succeed
 from twisted.python.failure import Failure
+
+from efolder_express.db import DownloadStatus
 
 
 def success_result_of(d):
@@ -50,3 +53,18 @@ class FakeVBMSClient(object):
         return [
             {"type_id": "1", "description": "Test!"}
         ]
+
+
+class FakeDownloadDatabase(object):
+    def __init__(self):
+        self._data = {
+            "started": DownloadStatus(
+                request_id="started",
+                file_number="123456789",
+                state="STARTED",
+                documents=[],
+            ),
+        }
+
+    def get_download(self, logger, request_id):
+        return succeed(self._data[request_id])
