@@ -61,7 +61,3 @@ class TestAccessibility(object):
     @pytest.inlineCallbacks
     def test_index(self, reactor, server):
         yield self._pa11y_test(reactor, server, "/efolder-express/")
-
-    @pytest.inlineCallbacks
-    def test_another(self, reactor, server):
-        yield succeed(None)
