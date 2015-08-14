@@ -81,6 +81,12 @@ class FakeDownloadDatabase(object):
                         errored=False
                     ),
                 ]
+            ),
+            "manifest-download-error": DownloadStatus(
+                request_id="manifest-download-error",
+                file_number="123456789",
+                state="ERRORED",
+                documents=[],
             )
         }
 
