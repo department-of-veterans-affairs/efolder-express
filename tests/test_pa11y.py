@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import inlineCallbacks, succeed
 from twisted.internet.endpoints import TCP4ServerEndpoint
 from twisted.internet.utils import getProcessOutputAndValue
 from twisted.python.procutils import which
@@ -21,7 +21,7 @@ def reactor():
 
 
 @pytest.fixture
-def server(reactor):
+def server(request, reactor):
     logger = Logger(FakeMemoryLog())
     app = DownloadEFolder(
         logger=logger,
@@ -34,6 +34,13 @@ def server(reactor):
     )
     endpoint = TCP4ServerEndpoint(reactor, 8888)
     d = endpoint.listen(Site(app.app.resource(), logPath="/dev/null"))
+
+    def addfinalizer(port):
+        # Add a callback so that the server is shutdown at the end of the test.
+        request.addfinalizer(port.stopListening)
+        return port
+
+    d.addCallback(addfinalizer)
     return pytest.blockon(d)
 
 
@@ -57,4 +64,4 @@ class TestAccessibility(object):
 
     @pytest.inlineCallbacks
     def test_another(self, reactor, server):
-        pass
+        yield succeed(None)
