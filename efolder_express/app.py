@@ -1,4 +1,5 @@
 import functools
+import json
 import os
 import uuid
 
@@ -228,6 +229,22 @@ class DownloadEFolder(object):
         )
         returnValue(self.render_template("download.html", {
             "status": download
+        }))
+
+    @app.route("/efolder-express/download/<request_id>/json/")
+    @instrumented_route
+    @inlineCallbacks
+    def download_status_json(self, request, request_id):
+        download = yield self.download_database.get_download(
+            self.logger, request_id=request_id
+        )
+        html = self.render_template("_download_status.html", {
+            "status": download,
+        })
+        request.setHeader("Content-Type", "application/json")
+        returnValue(json.dumps({
+            "completed": download.completed or download.state == "ERRORED",
+            "html": html,
         }))
 
     @app.route("/efolder-express/download/<request_id>/zip/")

@@ -1,9 +1,6 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-    {% if not status.completed and status.state != "ERRORED" %}
-        <meta http-equiv="refresh" content="2" />
-    {% endif %}
     <style type="text/css">
         .download-file-icon {
             padding-right: 8px;
@@ -19,4 +16,27 @@
             {% include "_download_status.html" %}
         </div>
     </div>
+{% endblock %}
+
+{% block extra_body %}
+    <script type="text/javascript">
+        var request_id = "{{ status.request_id }}";
+        var page_update = {
+            schedule: function() {
+                setTimeout(page_update.update_page, 2000);
+            },
+            update_page: function() {
+                $.get("/efolder-express/download/" + request_id + "/json/", function(data) {
+                    $(".content-area").html(data.html);
+                    if (!data.completed) {
+                        page_update.schedule();
+                    }
+                });
+            }
+        };
+
+        $(function() {
+            page_update.schedule();
+        });
+    </script>
 {% endblock %}
