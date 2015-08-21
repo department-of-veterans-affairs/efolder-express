@@ -68,3 +68,6 @@ class TestAccessibility(object):
     test_status_manifest_downloaded = pa11y_test(
         "/efolder-express/download/manifest-downloaded/"
     )
+    test_status_download_in_progress = pa11y_test(
+        "/efolder-express/download/download-in-progress/"
+    )

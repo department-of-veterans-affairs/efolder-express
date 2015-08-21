@@ -90,13 +90,13 @@ class DownloadEFolder(object):
     @classmethod
     def create_demo(cls, reactor, logger):
         return cls(
-            logger,
-            DemoMemoryDatabase(),
-            None,
-            None,
-            None,
-            None,
-            "demo"
+            logger=logger,
+            download_database=DemoMemoryDownloadDatabase(),
+            storage_path=None,
+            fernet=None,
+            vbms_client=None,
+            queue=None,
+            env_name="demo"
         )
 
     def render_template(self, template_name, data={}):
