@@ -36,6 +36,7 @@
         };
 
         $(function() {
+            $.ajaxSetup({cache: false});
             page_update.schedule();
         });
     </script>
