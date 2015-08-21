@@ -1,9 +1,6 @@
 import json
 
-from twisted.internet.defer import succeed
 from twisted.python.failure import Failure
-
-from efolder_express.db import Document, DownloadStatus
 
 
 def success_result_of(d):
