@@ -8,9 +8,10 @@ from twisted.python.procutils import which
 from twisted.web.server import Site
 
 from efolder_express.app import DownloadEFolder
+from efolder_express.demo import DemoMemoryDownloadDatabase
 from efolder_express.log import Logger
 
-from .utils import FakeDownloadDatabase, FakeMemoryLog
+from .utils import FakeMemoryLog
 
 
 @pytest.fixture
@@ -24,7 +25,7 @@ def server(request, reactor):
     logger = Logger(FakeMemoryLog())
     app = DownloadEFolder(
         logger=logger,
-        download_database=FakeDownloadDatabase(),
+        download_database=DemoMemoryDownloadDatabase(),
         storage_path=None,
         fernet=None,
         vbms_client=None,
@@ -66,4 +67,10 @@ class TestAccessibility(object):
     )
     test_status_manifest_downloaded = pa11y_test(
         "/efolder-express/download/manifest-downloaded/"
+    )
+    test_status_download_in_progress = pa11y_test(
+        "/efolder-express/download/download-in-progress/"
+    )
+    test_completed = pa11y_test(
+        "/efolder-express/download/completed/"
     )

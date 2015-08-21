@@ -17,6 +17,7 @@ from twisted.web.static import File
 import yaml
 
 from efolder_express.db import Document, DownloadDatabase
+from efolder_express.demo import DemoMemoryDownloadDatabase
 from efolder_express.utils import DeferredValue
 from efolder_express.vbms import VBMSClient, VBMSError
 
@@ -84,6 +85,18 @@ class DownloadEFolder(object):
             ),
             queue,
             config["env"],
+        )
+
+    @classmethod
+    def create_demo(cls, reactor, logger):
+        return cls(
+            logger=logger,
+            download_database=DemoMemoryDownloadDatabase(),
+            storage_path=None,
+            fernet=None,
+            vbms_client=None,
+            queue=None,
+            env_name="demo"
         )
 
     def render_template(self, template_name, data={}):
