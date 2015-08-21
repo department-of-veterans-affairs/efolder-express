@@ -4,15 +4,15 @@ python:
     - pypy
 
 cache:
-    npm: true
     directories:
+        - node_modules
         - $HOME/.cache/pip
 
 
 install:
     - pip install -U pip
     - pip install -r requirements.txt -r test-requirements.txt flake8 flake8-import-order
-    - npm install -g pa11y
+    - npm install pa11y
 
 script:
     - py.test
