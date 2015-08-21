@@ -24,6 +24,9 @@
                 padding-top: 8px;
                 padding-bottom: 8px;
             }
+            body {
+                background-color: #eee;
+            }
         </style>
         {% block extra_head %}{% endblock %}
     </head>
@@ -31,7 +34,7 @@
         <div class="container">
             {% block body %}{% endblock %}
             <hr />
-            <footer>
+            <footer class="text-center">
                 Built with love by the Digital Service at the <abbr title="Department of Veterans Affairs">VA</abbr>.
             </footer>
         </div>
