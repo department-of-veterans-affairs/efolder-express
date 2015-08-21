@@ -71,3 +71,6 @@ class TestAccessibility(object):
     test_status_download_in_progress = pa11y_test(
         "/efolder-express/download/download-in-progress/"
     )
+    test_completed = pa11y_test(
+        "/efolder-express/download/completed/"
+    )

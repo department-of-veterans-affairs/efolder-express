@@ -75,6 +75,47 @@ class DemoMemoryDownloadDatabase(object):
                 file_number="123456789",
                 state="ERRORED",
                 documents=[],
+            ),
+            "completed": DownloadStatus(
+                request_id="completed",
+                file_number="123456789",
+                state="MANIFEST_DOWNLOADED",
+                documents=[
+                    Document(
+                        id="",
+                        download_id="manifest-downloaded",
+                        document_id="",
+                        doc_type="",
+                        filename="abc.pdf",
+                        received_at=None,
+                        source="",
+                        content_location="/not-real/",
+                        errored=False
+                    ),
+                    Document(
+                        id="",
+                        download_id="manifest-downloaded",
+                        document_id="",
+                        doc_type="",
+                        filename="def.pdf",
+                        received_at=None,
+                        source="",
+                        content_location="/not-real/",
+                        errored=False
+                    ),
+                    Document(
+                        id="",
+                        download_id="manifest-downloaded",
+                        document_id="",
+                        doc_type="",
+                        filename="ghe.pdf",
+                        received_at=None,
+                        source="",
+                        content_location="/not-real/",
+                        errored=False
+                    ),
+
+                ]
             )
         }
 
