@@ -17,6 +17,18 @@ def db():
     return db
 
 
+class TestDocument(object):
+    def test_from_json(self):
+        doc = Document.from_json("test-document-id", {
+            "document_id": "123456789",
+            "doc_type": "123",
+            "filename": "abc.pdf",
+            "received_at": None,
+            "source": "The moon",
+        })
+        assert doc.received_at is None
+
+
 class TestDownloadDatabase(object):
     def scalar(self, db, q):
         d = db._engine.execute(q)

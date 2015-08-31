@@ -83,13 +83,18 @@ class Document(object):
 
     @classmethod
     def from_json(cls, download_id, data):
+        received_at = data["received_at"]
+        if received_at is not None:
+            received_at = datetime.datetime.strptime(
+                received_at, "%Y-%m-%d"
+            ).date()
         return cls(
             str(uuid.uuid4()),
             download_id,
             data["document_id"],
             data["doc_type"],
             data["filename"],
-            datetime.datetime.strptime(data["received_at"], "%Y-%m-%d").date(),
+            received_at,
             data["source"],
             content_location=None,
             errored=False,
