@@ -51,9 +51,15 @@ class DownloadStatus(object):
                 if doc.content_location:
                     with open(doc.content_location) as f:
                         data = fernet.decrypt(f.read())
+
+                    args = ()
+                    if doc.received_at is not None:
+                        args += (
+                            doc.received_at.timetuple()[:6],
+                        )
                     info = zipfile.ZipInfo(
                         "{}-eFolder/{}".format(self.file_number, doc.filename),
-                        doc.received_at.timetuple()[:6],
+                        *args
                     )
                     z.writestr(info, data)
 
