@@ -175,7 +175,7 @@ class DownloadDatabase(object):
             sqlalchemy.Column(
                 "received_at",
                 sqlalchemy.Date(),
-                nullable=False,
+                nullable=True,
             ),
             sqlalchemy.Column(
                 "source",
