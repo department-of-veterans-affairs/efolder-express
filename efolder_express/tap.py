@@ -1,6 +1,7 @@
-from twisted.application.internet import TCPServer
+from twisted.application.internet import StreamServerEndpointService
 from twisted.application.service import MultiService, Service
 from twisted.internet.defer import DeferredQueue, inlineCallbacks
+from twisted.internet.endpoints import serverFromString
 from twisted.python import log, usage
 from twisted.web.server import Site
 
@@ -91,10 +92,10 @@ def makeService(options):
         app.queue_pending_work()
 
     service = MultiService()
-    TCPServer(
-        8080,
+    endpoint = serverFromString(reactor, "tcp:8080")
+    StreamServerEndpointService(
+        endpoint,
         Site(app.app.resource(), logPath="/dev/null"),
-        reactor=reactor
     ).setServiceParent(service)
     if not options["demo"]:
         for _ in xrange(8):
