@@ -92,7 +92,7 @@ def makeService(options):
         app.queue_pending_work()
 
     service = MultiService()
-    endpoint = serverFromString(reactor, "tcp:8080")
+    endpoint = serverFromString(reactor, "tcp:8080:interface=127.0.0.1")
     StreamServerEndpointService(
         endpoint,
         Site(app.app.resource(), logPath="/dev/null"),
