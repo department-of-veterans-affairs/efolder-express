@@ -3,7 +3,7 @@ characteristic==14.3.0
 cryptography==0.9.3
 enum34==1.0.4
 idna==2.0
-ipaddress==1.0.14
+ipaddress==1.0.15
 Jinja2==2.8.0
 klein==15.1.0
 MarkupSafe==0.23
@@ -15,5 +15,5 @@ service-identity==14.0.0
 six==1.10.0
 SQLAlchemy==1.0.9
 Twisted==15.4.0
-Werkzeug==0.11.0
+Werkzeug==0.11.2
 zope.interface==4.1.3
