@@ -14,6 +14,6 @@ PyYAML==3.11
 service-identity==14.0.0
 six==1.10.0
 SQLAlchemy==1.0.11
-Twisted==15.5.0
+Twisted==22.2.0
 Werkzeug==0.11.3
 zope.interface==4.1.3
